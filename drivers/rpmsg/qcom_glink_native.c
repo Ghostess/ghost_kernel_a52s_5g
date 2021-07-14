@@ -1271,6 +1271,7 @@ static irqreturn_t qcom_glink_native_intr(int irq, void *data)
 		log_irq_wakeup_reason(irq);
 #endif
 		glink_resume_pkt = true;
+		should_wake = false;
 		pm_system_wakeup();
 	}
 	/* To wakeup any blocking writers */
