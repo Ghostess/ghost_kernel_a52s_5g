@@ -494,6 +494,15 @@ static inline bool mas_is_paused(struct ma_state *mas)
 	return mas->node == MAS_PAUSE;
 }
 
+/* Check if the mas is pointing to a node or not */
+static inline bool mas_is_active(struct ma_state *mas)
+{
+	if ((unsigned long)mas->node >= MAPLE_RESERVED_RANGE)
+		return true;
+
+	return false;
+}
+
 void mas_dup_tree(struct ma_state *oldmas, struct ma_state *mas);
 void mas_dup_store(struct ma_state *mas, void *entry);
 
