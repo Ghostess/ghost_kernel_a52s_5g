@@ -26,7 +26,7 @@ jobs:
         sudo apt install -y git curl zip unzip bc bison flex build-essential python3
 
     - name: Build Kernel
-      run:
+      run: |
         chmod +x build_kernel_zip.sh
         ./build_kernel_zip.sh
 
