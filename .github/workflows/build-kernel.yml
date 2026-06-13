@@ -19,6 +19,7 @@ jobs:
 
     - name: Build Kernel
       run:
+        chmod +x build_kernel_zip.sh
         ./build_kernel_zip.sh
 
     - name: Upload Kernel (artifact)
