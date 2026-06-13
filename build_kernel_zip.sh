@@ -199,32 +199,32 @@ fi
 export PATH="${CLANG_DIR}/bin:$(dirname "$MAGISKBOOT_BIN"):$PATH"
 info "PATH updated: Clang and magiskboot directories prepended"
 
-# # ─── Step 5: Clean previous build ────────────────────────────────────────────
-# info "Wiping out/ from previous build..."
-# rm -rf "${OUT_DIR}"
-# success "Clean done"
+# ─── Step 5: Clean previous build ────────────────────────────────────────────
+info "Wiping out/ from previous build..."
+rm -rf "${OUT_DIR}"
+success "Clean done"
 
-# # ─── Step 6: Defconfig ───────────────────────────────────────────────────────
-# info "Generating defconfig..."
-# make -C "${KERNEL_ROOT}" O="${OUT_DIR}" ARCH=arm64 vendor/a52sxq_kor_single_defconfig \
-#     || die "defconfig failed"
-# success "Defconfig generated"
+# ─── Step 6: Defconfig ───────────────────────────────────────────────────────
+info "Generating defconfig..."
+make -C "${KERNEL_ROOT}" O="${OUT_DIR}" ARCH=arm64 vendor/a52sxq_kor_single_defconfig \
+    || die "defconfig failed"
+success "Defconfig generated"
 
-# # ─── Step 7: Kernel build ────────────────────────────────────────────────────
-# info "Building kernel with $(nproc) jobs..."
-# make -j"$(nproc)" \
-#     -C "${KERNEL_ROOT}" \
-#     O="${OUT_DIR}" \
-#     ARCH=arm64 \
-#     CC=clang \
-#     LLVM=1 \
-#     LLVM_IAS=1 \
-#     CROSS_COMPILE=aarch64-linux-gnu- \
-#     KBUILD_BUILD_USER="${KBUILD_BUILD_USER}" \
-#     KBUILD_BUILD_HOST="${KBUILD_BUILD_HOST}" \
-#     CONFIG_SECTION_MISMATCH_WARN_ONLY=y \
-#     || die "Kernel build failed"
-# success "Kernel build complete"
+# ─── Step 7: Kernel build ────────────────────────────────────────────────────
+info "Building kernel with $(nproc) jobs..."
+make -j"$(nproc)" \
+    -C "${KERNEL_ROOT}" \
+    O="${OUT_DIR}" \
+    ARCH=arm64 \
+    CC=clang \
+    LLVM=1 \
+    LLVM_IAS=1 \
+    CROSS_COMPILE=aarch64-linux-gnu- \
+    KBUILD_BUILD_USER="${KBUILD_BUILD_USER}" \
+    KBUILD_BUILD_HOST="${KBUILD_BUILD_HOST}" \
+    CONFIG_SECTION_MISMATCH_WARN_ONLY=y \
+    || die "Kernel build failed"
+success "Kernel build complete"
 
 # ─── Step 8: Install and strip modules, generate module metadata ──────────────
 info "Installing kernel modules..."
