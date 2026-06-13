@@ -39,10 +39,11 @@ TOOLCHAIN_DIR="${KERNEL_ROOT}/toolchain"
 CLANG_DIR="${TOOLCHAIN_DIR}/clang"
 MAGISKBOOT_BIN="${TOOLCHAIN_DIR}/magiskboot/magiskboot"
 OUT_DIR="${KERNEL_ROOT}/out"
-MAGISKBOOT_BOOT_DIR="${TOOLCHAIN_DIR}/magiskboot/boot"
+STOCK_IMAGES_DIR="${KERNEL_ROOT}/stock"
+MAGISKBOOT_BOOT_DIR="${STOCK_IMAGES_DIR}/boot"
+MAGISKBOOT_VENDOR_DIR="${STOCK_IMAGES_DIR}/vendor_boot"
 TEMPLATE_ZIP_DIR="${KERNEL_ROOT}/template-zip-file"
 IMAGES_DIR="${TEMPLATE_ZIP_DIR}/images"
-MAGISKBOOT_VENDOR_DIR="${TOOLCHAIN_DIR}/magiskboot/vendor_boot"
 UPDATE_BINARY="${TEMPLATE_ZIP_DIR}/META-INF/com/google/android/update-binary"
 
 # ─── Derived build metadata ───────────────────────────────────────────────────
