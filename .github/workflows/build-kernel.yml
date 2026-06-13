@@ -17,6 +17,11 @@ jobs:
         path: toolchain
         key: ${{ runner.os }}-toolchains-r530567-v1
 
+    - name: Install Dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y git curl zip unzip bc bison flex build-essential python3
+
     - name: Build Kernel
       run:
         chmod +x build_kernel_zip.sh
