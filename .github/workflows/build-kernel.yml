@@ -1,37 +1,214 @@
-name: Build-Kernel
+name: Build Kernel ZIP (Native)
 
 on:
-   workflow_dispatch:
+  workflow_dispatch:
+  push:
+    branches: [ "ksu-next" ]
+
+env:
+  # CONFIG
+  DEVICE: "a52sxq"
+  KBUILD_BUILD_USER: "ghost"
+  KBUILD_BUILD_HOST: "release"
+  AUTHOR: "ghost"
+
+  # CONSTANTS
+  ROM_TYPE: "One-UI" # dont have an aosp branch
+  DEFCONFIG: "vendor/a52sxq_kor_single_defconfig"
+  CLANG_URL: "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r530567.tar.gz"
+  MAGISK_APK_URL: "https://github.com/topjohnwu/Magisk/releases/download/v30.7/Magisk-v30.7.apk"
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout Source
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 1
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
-    - name: Cache Toolchains
-      uses: actions/cache@v5
-      with:
-        path: toolchain
-        key: ${{ runner.os }}-toolchains-r530567-v1
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc bison flex libssl-dev kmod cpio zip unzip curl git tar grep sed libncurses5-dev gcc-aarch64-linux-gnu
 
-    - name: Install Dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y git curl zip unzip bc bison flex build-essential python3
+      - name: Setup dynamic environment variables
+        run: |
+          BUILD_DATE=$(date +%Y-%m-%d)
+          echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
+          
+          # Check KSU Version
+          if [ -d "KernelSU-Next" ]; then
+            KSU_VERSION=$(git -C KernelSU-Next describe --tags --abbrev=0 2>/dev/null || echo unknown)
+            echo "ROOT_DISPLAY=KernelSU-Next $KSU_VERSION" >> $GITHUB_ENV
+            echo "ZIP_NAME=${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_KSU-Next-${KSU_VERSION}_${DEVICE}.zip" >> $GITHUB_ENV
+          else
+            echo "ROOT_DISPLAY=none" >> $GITHUB_ENV
+            echo "ZIP_NAME=${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${DEVICE}.zip" >> $GITHUB_ENV
+          fi
 
-    - name: Build Kernel
-      run: |
-        chmod +x build_kernel_zip.sh
-        ./build_kernel_zip.sh
+      - name: Cache Toolchain
+        uses: actions/cache@v4
+        id: cache-toolchain
+        with:
+          path: toolchain/
+          key: ${{ runner.os }}-toolchain-r530567-magisk30.7
 
-    - name: Upload Kernel (artifact)
-      uses: actions/upload-artifact@v7
-      with:
-        name: "kernel-${{ github.sha }}"
-        path: "*.zip"
+      - name: Setup Toolchain (Clang & Magiskboot)
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p toolchain/clang toolchain/magiskboot
+          
+          # Download and extract Clang
+          curl -L --progress-meter "$CLANG_URL" -o clang.tar.gz
+          tar -xzf clang.tar.gz -C toolchain/clang
+          rm clang.tar.gz
+          
+          # Download and extract magiskboot
+          curl -L --progress-meter "$MAGISK_APK_URL" -o Magisk.apk
+          unzip -q Magisk.apk -d extracted_magisk
+          cp extracted_magisk/lib/x86_64/libmagiskboot.so toolchain/magiskboot/magiskboot
+          chmod +x toolchain/magiskboot/magiskboot
+          rm -rf Magisk.apk extracted_magisk
+
+      - name: Add Toolchains to PATH
+        run: |
+          echo "$GITHUB_WORKSPACE/toolchain/clang/bin" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/toolchain/magiskboot" >> $GITHUB_PATH
+
+      - name: Pre-flight checks
+        run: |
+          [[ -f "stock/boot/boot.img" ]] || exit 1
+          [[ -f "stock/vendor_boot/vendor_boot.img" ]] || exit 1
+          [[ -f "template-zip-file/META-INF/com/google/android/update-binary" ]] || exit 1
+
+      - name: Generate Defconfig & Inject Custom Options
+        run: |
+          # Generate base config
+          make O=out ARCH=arm64 ${{ env.DEFCONFIG }}
+          
+          # Inject config choices using kernel scripts/config
+          echo "Injecting custom configuration options..."
+          ./scripts/config --file out/.config \
+            -e COMPAT_VDSO \
+            -e SHADOW_CALL_STACK \
+            -e SHADOW_CALL_STACK_VMAP \
+            -d LTO_NONE \
+            -e LTO_CLANG_THIN \
+            -e THINLTO \
+            -d CFI_CLANG \
+            -e CFI_CLANG_SHADOW \
+            -d CFI_PERMISSIVE \
+            -e RELR
+            
+          # Validate and clean up the config tree based on our injections
+          make O=out ARCH=arm64 olddefconfig
+
+      - name: Build Kernel
+        run: |
+          make -j$(nproc) O=out ARCH=arm64 CC=clang LLVM=1 LLVM_IAS=1 \
+            CROSS_COMPILE=aarch64-linux-gnu- \
+            KBUILD_BUILD_USER="${{ env.KBUILD_BUILD_USER }}" \
+            KBUILD_BUILD_HOST="${{ env.KBUILD_BUILD_HOST }}" \
+            CONFIG_SECTION_MISMATCH_WARN_ONLY=y
+
+      - name: Process Modules & Generate Metadata
+        run: |
+          MODULES_STAGING="out/modules_staging"
+          make O=out ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- \
+            STRIP="llvm-strip --strip-debug" \
+            INSTALL_MOD_PATH=$MODULES_STAGING INSTALL_MOD_STRIP=1 modules_install
+            
+          find $MODULES_STAGING -name "*.ko" -exec llvm-strip --strip-unneeded {} \;
+          
+          MODULES_VERSIONED_DIR=$(find "$MODULES_STAGING/lib/modules" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+          KERNEL_VERSION=$(basename "$MODULES_VERSIONED_DIR")
+          FLAT_MODULES_DIR="out/flat_modules"
+          mkdir -p "$FLAT_MODULES_DIR/lib/modules/$KERNEL_VERSION"
+          
+          find "$MODULES_VERSIONED_DIR" -name "*.ko" -exec cp {} "$FLAT_MODULES_DIR/lib/modules/$KERNEL_VERSION/" \;
+          
+          depmod -b "$FLAT_MODULES_DIR" -F "out/System.map" "$KERNEL_VERSION"
+          
+          FLAT_VERSIONED_DIR="$FLAT_MODULES_DIR/lib/modules/$KERNEL_VERSION"
+          
+          for mod_file in "$FLAT_VERSIONED_DIR"/modules.*; do
+              [[ -f "$mod_file" ]] || continue
+              sed -E -i 's@(^| )([^ /][^ ]*\.ko)@\1/lib/modules/\2@g' "$mod_file"
+          done
+          
+          find "$FLAT_VERSIONED_DIR" -maxdepth 1 -name "*.ko" -exec basename {} \; | sort > "$FLAT_VERSIONED_DIR/modules.load"
+          
+          echo "FLAT_VERSIONED_DIR=$FLAT_VERSIONED_DIR" >> $GITHUB_ENV
+          echo "MODULES_VERSIONED_DIR=$MODULES_VERSIONED_DIR" >> $GITHUB_ENV
+
+      - name: Repack boot.img
+        run: |
+          mkdir -p template-zip-file/images
+          cd stock/boot
+          magiskboot unpack boot.img
+          cp ../../out/arch/arm64/boot/Image kernel
+          magiskboot repack boot.img
+          cp new-boot.img ../../template-zip-file/images/boot.img
+          rm -f kernel ramdisk.cpio new-boot.img
+
+      - name: Copy dtbo.img
+        run: cp out/arch/arm64/boot/dtbo.img template-zip-file/images/dtbo.img
+
+      - name: Repack vendor_boot.img
+        run: |
+          cd stock/vendor_boot
+          magiskboot unpack -h vendor_boot.img || true
+          
+          cp ../../out/arch/arm64/boot/dts/vendor/qcom/yupik.dtb dtb
+          sed -i 's/^name=.*/name=SRPUE26A001/' header
+          
+          mkdir -p ramdisk && cd ramdisk
+          cpio -idmu < ../ramdisk.cpio
+          
+          rm -f lib/modules/*.ko lib/modules/modules.*
+          find lib/modules -maxdepth 1 -type d -name '*-gki' -print0 | while IFS= read -r -d '' gki_dir; do
+              find "$gki_dir" -mindepth 1 -delete
+          done
+          
+          find "../../$MODULES_VERSIONED_DIR" -name "*.ko" -exec cp -t lib/modules/ {} +
+          cp "../../$FLAT_VERSIONED_DIR"/modules.* lib/modules/
+          
+          mkdir -p lib/firmware/tsp_stm
+          cp ../../firmware/tsp_stm/fts5cu56a_a52sxq* lib/firmware/tsp_stm/
+          
+          find . -type d -exec chmod 755 '{}' \;
+          find . -type f -exec chmod 644 '{}' \;
+          
+          find . -mindepth 1 -print0 | cpio --null -o -H newc --owner root:root > ../ramdisk.cpio
+          cd ..
+          
+          magiskboot repack vendor_boot.img
+          cp new-boot.img ../../template-zip-file/images/vendor_boot.img
+          rm -rf ramdisk dtb header ramdisk.cpio new-boot.img
+
+      - name: Patch update-binary and Create ZIP
+        run: |
+          UPDATE_BINARY="template-zip-file/META-INF/com/google/android/update-binary"
+          
+          ROM_ESC="$(printf '%s\n' "${ROM_TYPE}" | sed 's/[\/&]/\\&/g')"
+          ROOT_ESC="$(printf '%s\n' "$ROOT_DISPLAY" | sed 's/[\/&]/\\&/g')"
+          DATE_ESC="$(printf '%s\n' "$BUILD_DATE" | sed 's/[\/&]/\\&/g')"
+          
+          sed -i \
+              -e "s|^ui_print \"ROM:.*\";$|ui_print \"ROM:        ${ROM_ESC}\";|" \
+              -e "s|^ui_print \"Root:.*\";$|ui_print \"Root:       ${ROOT_ESC}\";|" \
+              -e "s|^ui_print \"Build date:.*\";$|ui_print \"Build date: ${DATE_ESC}\";|" \
+              "$UPDATE_BINARY"
+              
+          cd template-zip-file
+          zip -X -r -9 "../$ZIP_NAME" META-INF/ images/
+
+      - name: Upload Final ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: "*.zip"
+          compression-level: 0
