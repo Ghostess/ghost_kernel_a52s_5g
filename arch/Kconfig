@@ -557,6 +557,7 @@ config ARCH_SUPPORTS_SHADOW_CALL_STACK
 config SHADOW_CALL_STACK
 	bool "Clang Shadow Call Stack"
 	depends on ARCH_SUPPORTS_SHADOW_CALL_STACK
+	default y
 	help
 	  This option enables Clang's Shadow Call Stack, which uses a
 	  shadow stack to protect function return addresses from being
@@ -606,7 +607,7 @@ config THINLTO
 
 choice
 	prompt "Link-Time Optimization (LTO) (EXPERIMENTAL)"
-	default LTO_NONE
+	default LTO_CLANG
 	help
 	  This option turns on Link-Time Optimization (LTO).
 
@@ -633,6 +634,7 @@ config CFI_CLANG
 	bool "Use Clang's Control Flow Integrity (CFI)"
 	depends on LTO_CLANG && KALLSYMS
 	depends on !GCOV_KERNEL
+	default n
 	help
 	  This option enables Clang's Control Flow Integrity (CFI), which adds
 	  runtime checking for indirect function calls.
