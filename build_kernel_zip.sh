@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # ===================================================================================
 # build_kernel_zip.sh
-# Automated kernel build + flashable zip script for bone-machine's A52s 5G kernel
-# Must be run from the kernel root directory (android_kernel_samsung_sm7325_a52s_5g/)
+# Automated kernel build + flashable zip script from bone-machine's A52s 5G kernel
+# Must be run from the kernel root directory (android_kernel_samsung_sm7325/)
 # ===================================================================================
 
 set -euo pipefail
@@ -207,7 +207,7 @@ success "Clean done"
 
 # ─── Step 6: Defconfig ───────────────────────────────────────────────────────
 info "Generating defconfig..."
-make -C "${KERNEL_ROOT}" O="${OUT_DIR}" ARCH=arm64 vendor/a52sxq_kor_single_defconfig \
+make -C "${KERNEL_ROOT}" O="${OUT_DIR}" LLVM=1 LLVM_IAS=1 ARCH=arm64 vendor/a52sxq_kor_single_defconfig \
     || die "defconfig failed"
 success "Defconfig generated"
 
