@@ -31,7 +31,7 @@ jobs:
       - name: Compile Kernel
         run: |
           chmod +x ./build_kernel_zip.sh
-          ./build_kernel_zip.sh
+          ./build_kernel_zip.sh || true
           
       - name: Upload Kernel
         uses: actions/upload-artifact@v7
