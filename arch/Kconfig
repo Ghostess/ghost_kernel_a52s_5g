@@ -632,9 +632,9 @@ endchoice
 
 config CFI_CLANG
 	bool "Use Clang's Control Flow Integrity (CFI)"
+    default n
 	depends on LTO_CLANG && KALLSYMS
 	depends on !GCOV_KERNEL
-	default n
 	help
 	  This option enables Clang's Control Flow Integrity (CFI), which adds
 	  runtime checking for indirect function calls.
