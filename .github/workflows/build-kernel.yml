@@ -32,7 +32,9 @@ jobs:
         run: |
           chmod +x ./build_kernel_zip.sh
           ./build_kernel_zip.sh
-          ZIP_FILE=$(basename $(ls *.zip | head -n 1) .zip)
+          
+          ZIPS=(*.zip)
+          ZIP_FILE=$(basename "${ZIPS[0]}" .zip)
           echo "ZIP_NAME=${ZIP_FILE}" >> $GITHUB_ENV
           
       - name: Upload Kernel
