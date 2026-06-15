@@ -133,6 +133,8 @@ git -C "${KERNEL_ROOT}" rev-parse --git-dir >/dev/null 2>&1 \
 
 info "Updating git submodules..."
 git -C "${KERNEL_ROOT}" submodule update --init --recursive
+info "Fetching KernelSU tags..."
+git -C "${KERNEL_ROOT}/KernelSU-Next" fetch origin --tags
 success "Submodules up to date"
 
 # ─── Step 2: Clang toolchain ──────────────────────────────────────────────────
