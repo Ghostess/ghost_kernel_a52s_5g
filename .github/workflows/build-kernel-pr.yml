@@ -14,9 +14,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.pull_request.head.sha }} 
-          submodules: recursive
+          ref: ${{ github.event.pull_request.head.sha }}
+          submodules: false
           fetch-depth: 1
+
+      - name: Checkout submodules
+        run: |
+          git submodule init
+          git submodule foreach --recursive '
+            echo "Unshallowing submodule: $name"
+            git fetch --unshallow || git fetch
+            git checkout -f
+          '
 
       - name: Cache Toolchains
         uses: actions/cache@v5
