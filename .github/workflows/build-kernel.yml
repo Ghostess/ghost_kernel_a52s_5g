@@ -42,9 +42,17 @@ jobs:
               exit 1
           fi
 
+      - run: echo "sha_short=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+        
       - name: Upload Kernel
         uses: actions/upload-artifact@v7
         with:
-          name: "a52s_oneui_ksu-next-${{ github.sha }}"
+          name: "a52s_oneui_ksu-next-${{ env.sha_short }}"
           path: "*.zip"
           compression-level: 0
+
+      - name: Upload build config
+        uses: actions/upload-artifact@v7
+        with:
+          path: "out/.config"
+          archive: false
