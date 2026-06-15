@@ -3,7 +3,8 @@ name: Build Kernel
 on:
   workflow_dispatch:
   push:
-    branches: [ "ksu-next" ]
+    branches:
+      - ksu-next
 
 jobs:
   build:
@@ -22,7 +23,7 @@ jobs:
         with:
           path: toolchain/
           key: ${{ runner.os }}-toolchains-r530567
-          
+
       - name: Install Dependencies
         run: |
           sudo apt-get update
@@ -32,7 +33,15 @@ jobs:
         run: |
           chmod +x ./build_kernel_zip.sh
           ./build_kernel_zip.sh || true
-          
+
+      # cause we continue on error (it was erroring on success so this is better i guess)
+      - name: Check if kernel zip exists 
+        run: |
+          zips=( *.zip )
+          if [ ! -e "${zips[0]}" ]; then
+              exit 1
+          fi
+
       - name: Upload Kernel
         uses: actions/upload-artifact@v7
         with:
