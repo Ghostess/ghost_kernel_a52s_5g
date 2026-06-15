@@ -48,22 +48,7 @@ UPDATE_BINARY="${TEMPLATE_ZIP_DIR}/META-INF/com/google/android/update-binary"
 
 # ─── Derived build metadata ───────────────────────────────────────────────────
 BUILD_DATE="$(date +%Y-%m-%d)"
-KSU_VERSION="$(git -C "$KERNEL_ROOT/KernelSU-Next" describe --tags --abbrev=0 2>/dev/null || echo unknown)"
 ROM_TYPE="One-UI"
-
-# Display string for root solution
-if [[ "$KSU_VERSION" == "none" ]]; then
-    ROOT_DISPLAY="none"
-else
-    ROOT_DISPLAY="KernelSU-Next ${KSU_VERSION}"
-fi
-
-# ZIP name: drop the KSU-Next segment on branches that don't ship it
-if [[ "$KSU_VERSION" == "none" ]]; then
-    ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${DEVICE}.zip"
-else
-    ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_KSU-Next-${KSU_VERSION}_${DEVICE}.zip"
-fi
 
 # ─── Sanity checks ────────────────────────────────────────────────────────────
 [[ "$(basename "$KERNEL_ROOT")" == "android_kernel_samsung_sm7325" ]] \
@@ -117,11 +102,6 @@ check_dir  "${TEMPLATE_ZIP_DIR}/META-INF"               "Flashable zip META-INF 
 check_dir  "${KERNEL_ROOT}/firmware/tsp_stm"            "Firmware source dir"
 check_glob "${KERNEL_ROOT}/firmware/tsp_stm/fts5cu56a_a52sxq*" "TSP firmware file"
 
-# KernelSU-Next submodule (only on KSU branches)
-if [[ "$KSU_VERSION" != "none" ]]; then
-    check_dir "${KERNEL_ROOT}/KernelSU-Next"            "KernelSU-Next submodule"
-fi
-
 # Kernel defconfig
 check_file "${KERNEL_ROOT}/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig" "Kernel defconfig"
 
@@ -136,6 +116,27 @@ git -C "${KERNEL_ROOT}" submodule update --init --recursive
 info "Fetching KernelSU tags..."
 git -C "${KERNEL_ROOT}/KernelSU-Next" fetch origin --tags
 success "Submodules up to date"
+
+KSU_VERSION="$(git -C "$KERNEL_ROOT/KernelSU-Next" describe --tags --abbrev=0 2>/dev/null || echo unknown)"
+
+# KernelSU-Next submodule (only on KSU branches)
+if [[ "$KSU_VERSION" != "none" ]]; then
+    check_dir "${KERNEL_ROOT}/KernelSU-Next"            "KernelSU-Next submodule"
+fi
+
+# Display string for root solution
+if [[ "$KSU_VERSION" == "none" ]]; then
+    ROOT_DISPLAY="none"
+else
+    ROOT_DISPLAY="KernelSU-Next ${KSU_VERSION}"
+fi
+
+# ZIP name: drop the KSU-Next segment on branches that don't ship it
+if [[ "$KSU_VERSION" == "none" ]]; then
+    ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${DEVICE}.zip"
+else
+    ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_KSU-Next-${KSU_VERSION}_${DEVICE}.zip"
+fi
 
 # ─── Step 2: Clang toolchain ──────────────────────────────────────────────────
 if [[ -x "${CLANG_DIR}/bin/clang" ]] &&
