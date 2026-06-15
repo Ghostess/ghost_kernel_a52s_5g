@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - ksu-next
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   build:
@@ -13,6 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
+          ref: ${{ github.event.pull_request.head.sha }} 
           submodules: recursive
           fetch-depth: 1
 
@@ -42,9 +44,17 @@ jobs:
               exit 1
           fi
 
+      - run: echo "sha_short=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+        
       - name: Upload Kernel
         uses: actions/upload-artifact@v7
         with:
-          name: "a52s_oneui_ksu-next-${{ github.sha }}"
+          name: "a52s_oneui_ksu-next-${{ env.sha_short }}-pr"
           path: "*.zip"
           compression-level: 0
+
+      - name: Upload build config
+        uses: actions/upload-artifact@v7
+        with:
+          path: "out/.config"
+          archive: false
