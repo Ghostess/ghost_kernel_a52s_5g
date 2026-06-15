@@ -42,7 +42,8 @@ jobs:
               exit 1
           fi
 
-      - run: echo "sha_short=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+      - name: Set sha_short env variable
+        run: echo "sha_short=`git rev-parse --short HEAD`" >> $GITHUB_ENV
         
       - name: Upload Kernel
         uses: actions/upload-artifact@v7
@@ -55,4 +56,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           path: "out/.config"
+          include-hidden-files: true
           archive: false
