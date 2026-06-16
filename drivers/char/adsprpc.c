@@ -613,6 +613,7 @@ struct fastrpc_mmap {
 	struct timespec64 map_end_time;
 	bool is_filemap; /* flag to indicate map used in process init */
 	unsigned int ctx_refs; /* Indicates reference count for context map */
+	int dma_handle_refs;
 };
 
 enum fastrpc_perfkeys {
