@@ -456,29 +456,30 @@ EXPORT_SYMBOL(ipa_smmu_free_sgt);
 
 static int ipa_pm_notify(struct notifier_block *b, unsigned long event, void *p)
 {
-	IPADBG("Entry\n");
+    IPADBG("Entry\n");
 #if IS_ENABLED(CONFIG_DEEPSLEEP) || IS_ENABLED(CONFIG_HIBERNATION)
-	switch (event) {
-		case PM_POST_SUSPEND:
+    switch (event) {
+        case PM_POST_SUSPEND:
 #ifdef CONFIG_DEEPSLEEP
-			if (mem_sleep_current == PM_SUSPEND_MEM && ipa3_ctx->deepsleep) {
-				IPADBG("Enter deepsleep resume\n");
-				ipa3_deepsleep_resume();
-				IPADBG("Exit deepsleep resume\n");
-			}
-			break;
-		case PM_POST_HIBERNATION:
-			/*Using the same deepsleep flag to check if freeze happened or not.*/
-			if (ipa3_ctx->deepsleep) {
-				IPADBG("Enter hibernate restore\n");
-				ipa3_deepsleep_resume();
-				IPADBG("Exit hibernate restore\n");
-			}
-			break;
-	}
+            if (mem_sleep_current == PM_SUSPEND_MEM && ipa3_ctx->deepsleep) {
+                IPADBG("Enter deepsleep resume\n");
+                ipa3_deepsleep_resume();
+                IPADBG("Exit deepsleep resume\n");
+            }
 #endif
-	IPADBG("Exit\n");
-	return NOTIFY_DONE;
+            break;
+        case PM_POST_HIBERNATION:
+            /*Using the same deepsleep flag to check if freeze happened or not.*/
+            if (ipa3_ctx->deepsleep) {
+                IPADBG("Enter hibernate restore\n");
+                ipa3_deepsleep_resume();
+                IPADBG("Exit hibernate restore\n");
+            }
+            break;
+    }
+#endif
+    IPADBG("Exit\n");
+    return NOTIFY_DONE;
 }
 
 
