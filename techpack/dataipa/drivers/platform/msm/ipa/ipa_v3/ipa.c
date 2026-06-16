@@ -456,7 +456,8 @@ EXPORT_SYMBOL(ipa_smmu_free_sgt);
 
 static int ipa_pm_notify(struct notifier_block *b, unsigned long event, void *p)
 {
-	IPAERR("Entry\n");
+	IPADBG("Entry\n");
+#if IS_ENABLED(CONFIG_DEEPSLEEP) || IS_ENABLED(CONFIG_HIBERNATION)
 	switch (event) {
 		case PM_POST_SUSPEND:
 #ifdef CONFIG_DEEPSLEEP
@@ -465,10 +466,18 @@ static int ipa_pm_notify(struct notifier_block *b, unsigned long event, void *p)
 				ipa3_deepsleep_resume();
 				IPADBG("Exit deepsleep resume\n");
 			}
-#endif
+			break;
+		case PM_POST_HIBERNATION:
+			/*Using the same deepsleep flag to check if freeze happened or not.*/
+			if (ipa3_ctx->deepsleep) {
+				IPADBG("Enter hibernate restore\n");
+				ipa3_deepsleep_resume();
+				IPADBG("Exit hibernate restore\n");
+			}
 			break;
 	}
-	IPAERR("Exit\n");
+#endif
+	IPADBG("Exit\n");
 	return NOTIFY_DONE;
 }
 
