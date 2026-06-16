@@ -133,7 +133,7 @@
 	typeof(base) __base = (base); \
 	typeof(pmds) __pmds = (pmds); \
 	(__iova < __base) ? ERR_PTR(-EINVAL) : \
-	__pmds + ((__iova - ALIGN_DOWN(__base, SZ_2M)) >> AV8L_FAST_PAGE_SHIFT); \
+	__pmds + ((__iova - __base) >> AV8L_FAST_PAGE_SHIFT); \
 })
 
 static inline dma_addr_t av8l_dma_addr(void *addr)
@@ -407,6 +407,11 @@ static bool av8l_fast_iova_coherent(struct io_pgtable_ops *ops,
 {
 	struct av8l_fast_io_pgtable *data = iof_pgtable_ops_to_data(ops);
 	av8l_fast_iopte *ptep = iopte_pmd_offset(data->pmds, data->base, iova);
+	if (IS_ERR(ptep)) {
+		pr_err("Invalid iova : 0x%lx, as it is less than base : 0x%llx\n",
+				iova, data->base);
+		return false;
+	}
 
 	if (IS_ERR(ptep)) {
 		pr_err("Invalid iova : 0x%lx, as it is less than base : 0x%llx\n",
