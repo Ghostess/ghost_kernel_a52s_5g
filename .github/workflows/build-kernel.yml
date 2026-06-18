@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - ksu-next
+    paths-ignore:
+      - 'README.md'
 
 jobs:
   build:
