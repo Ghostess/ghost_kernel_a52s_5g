@@ -30,6 +30,8 @@ AUTHOR="ghost"
 DEVICE="a52sxq"
 KBUILD_BUILD_USER="ghost"
 KBUILD_BUILD_HOST="release"
+
+
 CLANG_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r530567.tar.gz"
 MAGISK_APK_URL="https://github.com/topjohnwu/Magisk/releases/download/v30.7/Magisk-v30.7.apk"
 
@@ -139,8 +141,7 @@ else
 fi
 
 # ─── Step 2: Clang toolchain ──────────────────────────────────────────────────
-if [[ -x "${CLANG_DIR}/bin/clang" ]] &&
-   "${CLANG_DIR}/bin/clang" --version >/dev/null 2>&1; then
+if [[ -x "${CLANG_DIR}/bin/clang" ]] && "${CLANG_DIR}/bin/clang" --version >/dev/null 2>&1; then
     success "Clang already present and working at ${CLANG_DIR}, skipping download"
 else
     info "Downloading Clang toolchain..."
