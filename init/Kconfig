@@ -384,8 +384,9 @@ config HAVE_ARCH_AUDITSYSCALL
 	bool
 
 config AUDITSYSCALL
-	def_bool y
+	bool
 	depends on AUDIT && HAVE_ARCH_AUDITSYSCALL
+	default n
 	select FSNOTIFY
 
 source "kernel/irq/Kconfig"
