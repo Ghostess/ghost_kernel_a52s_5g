@@ -420,7 +420,7 @@ static void cache_nat_entry(struct f2fs_sb_info *sbi, nid_t nid,
 	if (rwsem_is_locked(&sbi->cp_global_sem))
 		return;
 
-	new = __alloc_nat_entry(sbi, nid, false);
+	new = __alloc_nat_entry(nid, false);
 	if (!new)
 		return;
 
