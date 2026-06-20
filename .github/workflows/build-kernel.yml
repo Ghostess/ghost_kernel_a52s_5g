@@ -3,8 +3,6 @@ name: Build Kernel
 on:
   workflow_dispatch:
   push:
-    branches:
-      - ksu-next
     paths-ignore:
       - 'README.md'
 
