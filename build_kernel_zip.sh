@@ -25,6 +25,11 @@ cleanup_tmp() {
 }
 trap cleanup_tmp EXIT
 
+# ─── Derived build metadata ───────────────────────────────────────────────────
+SHA=$(git rev-parse --short HEAD)
+BUILD_DATE="$(date +%Y-%m-%d)"
+ROM_TYPE="One-UI"
+
 # ─── Hardcoded config ─────────────────────────────────────────────────────────
 AUTHOR="ghost"
 DEVICE="a52sxq"
@@ -47,10 +52,6 @@ MAGISKBOOT_VENDOR_DIR="${STOCK_IMAGES_DIR}/vendor_boot"
 TEMPLATE_ZIP_DIR="${KERNEL_ROOT}/template-zip-file"
 IMAGES_DIR="${TEMPLATE_ZIP_DIR}/images"
 UPDATE_BINARY="${TEMPLATE_ZIP_DIR}/META-INF/com/google/android/update-binary"
-
-# ─── Derived build metadata ───────────────────────────────────────────────────
-BUILD_DATE="$(date +%Y-%m-%d)"
-ROM_TYPE="One-UI"
 
 # ─── Sanity checks ────────────────────────────────────────────────────────────
 [[ "$(basename "$KERNEL_ROOT")" == "android_kernel_samsung_sm7325" ]] \
@@ -135,9 +136,9 @@ fi
 
 # ZIP name: drop the KSU-Next segment on branches that don't ship it
 if [[ "$KSU_VERSION" == "none" ]]; then
-    ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${DEVICE}.zip"
+    ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${DEVICE}_${SHA}.zip"
 else
-    ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_KSU-Next-${KSU_VERSION}_${DEVICE}.zip"
+    ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_KSU-Next-${KSU_VERSION}_${DEVICE}_${SHA}.zip"
 fi
 
 # ─── Step 2: Clang toolchain ──────────────────────────────────────────────────
