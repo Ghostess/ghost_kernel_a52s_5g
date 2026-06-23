@@ -27,6 +27,14 @@
 #define ENABLE_SM5714_ENBYPASS_MODE	1
 #define SM5714_CHARGER_VERSION  "UD2"
 
+#if !IS_ENABLED(CONFIG_CHARGER_SM5714_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+
+  #undef dev_info
+  #define dev_info(dev, fmt, ...) do { } while (0)
+#endif
+
 static struct device_attribute sm5714_charger_attrs[] = {
 	SM5714_CHARGER_ATTR(chip_id),
 	SM5714_CHARGER_ATTR(data),
@@ -572,8 +580,10 @@ static int psy_chg_get_health(struct sm5714_charger_data *charger)
 	if (charger->is_charging) {
 		chg_set_wdt_tmr_reset(charger);
 	}
+	#if IS_ENABLED(CONFIG_CHARGER_SM5714_DEBUG)
 	chg_print_regmap(charger);  /* please keep this log message */
-
+	#endif
+	
 	sm5714_read_reg(charger->i2c, SM5714_CHG_REG_STATUS1, &reg);
 
 	if (reg & (0x1 << 0)) {
@@ -661,7 +671,9 @@ static int sm5714_chg_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_EXT_PROP_MIN ... POWER_SUPPLY_EXT_PROP_MAX:
 		switch (ext_psp) {
 		case POWER_SUPPLY_EXT_PROP_MONITOR_WORK:
+			#if IS_ENABLED(CONFIG_CHARGER_SM5714_DEBUG)
 			chg_print_regmap(charger);
+			#endif
 			break;
 #if defined(CONFIG_AFC_CHARGER_MODE)
 		case POWER_SUPPLY_EXT_PROP_AFC_CHARGER_MODE:
@@ -904,7 +916,9 @@ static int sm5714_chg_set_property(struct power_supply *psy,
 			break;
 		case POWER_SUPPLY_EXT_PROP_CHARGING_ENABLED:
 			psy_chg_set_charging_enable(charger, val->intval);
+			#if IS_ENABLED(CONFIG_CHARGER_SM5714_DEBUG)
 			chg_print_regmap(charger);
+			#endif
 			break;
 #if defined(CONFIG_AFC_CHARGER_MODE)
 		case POWER_SUPPLY_EXT_PROP_AFC_CHARGER_MODE:
@@ -1175,7 +1189,9 @@ static inline void sm5714_chg_init(struct sm5714_charger_data *charger)
 	chg_set_auto_shipmode(charger, AUTO_SHIP_MODE_VREF_V_2_6);
 	chg_set_auto_shipmode_time(charger, AUTO_SHIP_MODE_TIME_S_4_0);
 	chg_set_lxslope(charger, charger->pdata->chg_lxslope);
+	#if IS_ENABLED(CONFIG_CHARGER_SM5714_DEBUG)
 	chg_print_regmap(charger);
+	#endif
 
 	dev_info(charger->dev, "%s: init done.\n", __func__);
 }

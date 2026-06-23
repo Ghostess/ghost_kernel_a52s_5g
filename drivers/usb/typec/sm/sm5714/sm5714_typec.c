@@ -73,6 +73,13 @@ static enum dual_role_property sm5714_fusb_drp_properties[] = {
 
 #define SM5714_USBPD_I2C_RETRY 3
 
+#if !IS_ENABLED(CONFIG_PDIC_SM5714_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+  #undef dev_info
+  #define dev_info(dev, fmt, ...) do { } while (0)
+#endif
+
 struct i2c_client *test_i2c;
 static usbpd_phy_ops_type sm5714_ops;
 
@@ -3778,6 +3785,7 @@ static void sm5714_delayed_external_notifier_init(struct work_struct *work)
 
 static void sm5714_usbpd_debug_reg_log(struct work_struct *work)
 {
+#if IS_ENABLED(CONFIG_PDIC_SM5714_DEBUG)
 	struct sm5714_phydrv_data *pdic_data =
 		container_of(work, struct sm5714_phydrv_data,
 				debug_work.work);
@@ -3814,6 +3822,7 @@ static void sm5714_usbpd_debug_reg_log(struct work_struct *work)
 	if (!pdic_data->suspended)
 		schedule_delayed_work(&pdic_data->debug_work,
 				msecs_to_jiffies(60000));
+#endif
 }
 
 static int sm5714_usbpd_probe(struct i2c_client *i2c,

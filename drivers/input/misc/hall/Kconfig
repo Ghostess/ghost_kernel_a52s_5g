@@ -25,3 +25,7 @@ config HALL_DUMP_KEY_MODE
 	help
 	  Enable hall dump key
 
+config HALL_DEBUG
+	bool
+	default n
+	depends on INPUT_HALL_IC

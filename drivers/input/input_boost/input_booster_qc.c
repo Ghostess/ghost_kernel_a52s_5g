@@ -2,6 +2,14 @@
 #include <linux/device.h>
 #include <linux/syscalls.h>
 
+#if !IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+
+  #undef pr_booster
+  #define pr_booster(fmt, ...) do { } while (0)
+#endif
+
 int current_hmp_boost;
 struct pm_qos_request lpm_bias_pm_qos_request;
 

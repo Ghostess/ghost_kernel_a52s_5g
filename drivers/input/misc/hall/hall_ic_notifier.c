@@ -6,6 +6,11 @@
 #include <linux/hall/hall_ic_notifier.h>
 #include <linux/module.h>
 
+#if !IS_ENABLED(CONFIG_HALL_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+#endif
+
 static struct hall_notifier_context hall_notifier;
 static struct blocking_notifier_head hall_nb_head = BLOCKING_NOTIFIER_INIT(hall_nb_head);
 

@@ -303,3 +303,8 @@ config SEC_BATTERY_MISC_TEST
 	  for kunitest
           for sec_pd_test
 endmenu
+
+config BATTERY_SAMSUNG_DEBUG
+	bool
+	default n
+	depends on BATTERY_SAMSUNG

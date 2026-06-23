@@ -133,8 +133,10 @@ extern void sec_debug_print_sleep_time(void);
 extern void sec_clock_debug_print_enabled(void);
 static int msm_pm_sleep_sec_debug;
 module_param_named(secdebug, msm_pm_sleep_sec_debug, int, 0664);
+#if IS_ENABLED(CONFIG_QTI_RPM_STATS_LOG)
 extern void debug_soc_stats_show(char *annotation);
 extern void debug_masterstats_show(char *annotation);
+#endif
 #endif /* CONFIG_SEC_PM */
 
 static bool sleep_disabled;
@@ -1777,8 +1779,10 @@ static int lpm_suspend_prepare(void)
 	sec_clock_debug_print_enabled();
 	regulator_debug_print_enabled();
 
+#if IS_ENABLED(CONFIG_QTI_RPM_STATS_LOG)
 	debug_masterstats_show("entry");
 	debug_soc_stats_show("entry");
+#endif
 #endif
 
 	return 0;
@@ -1791,8 +1795,10 @@ static void lpm_suspend_wake(void)
 
 #if IS_ENABLED(CONFIG_SEC_PM)
 	sec_debug_print_sleep_time();
+	#if IS_ENABLED(CONFIG_QTI_RPM_STATS_LOG)
 	debug_soc_stats_show("exit");
 	debug_masterstats_show("exit");
+	#endif
 #endif
 }
 

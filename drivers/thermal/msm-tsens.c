@@ -17,15 +17,18 @@
 
 LIST_HEAD(tsens_device_list);
 
-#if IS_ENABLED(CONFIG_SEC_PM)
+#if IS_ENABLED(CONFIG_SEC_PM) && IS_ENABLED(CONFIG_THERMAL_DEBUG)
 static struct delayed_work ts_print_work;
-struct tsens_device *ts_tmdev0 = NULL;
-struct tsens_device *ts_tmdev1 = NULL;
 
 /* TODO: optimize the # of tsens pring, now for bring up  debugging */
 static int ts_print_num0[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 static int ts_print_num1[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 static int ts_print_count;
+#endif
+
+#if IS_ENABLED(CONFIG_SEC_PM)
+struct tsens_device *ts_tmdev0 = NULL;
+struct tsens_device *ts_tmdev1 = NULL;
 #endif
 
 static int tsens_get_temp(void *data, int *temp)
@@ -262,7 +265,7 @@ static int tsens_tm_remove(struct platform_device *pdev)
 {
 	platform_set_drvdata(pdev, NULL);
 
-#if IS_ENABLED(CONFIG_SEC_PM)
+#if IS_ENABLED(CONFIG_SEC_PM) && IS_ENABLED(CONFIG_THERMAL_DEBUG)
 	cancel_delayed_work_sync(&ts_print_work);
 #endif
 
@@ -301,41 +304,41 @@ static void tsens_therm_fwk_notify(struct work_struct *work)
 	}
 }
 
-#if IS_ENABLED(CONFIG_SEC_PM)
+#if IS_ENABLED(CONFIG_SEC_PM) && IS_ENABLED(CONFIG_THERMAL_DEBUG)
 static void __ref ts_print(struct work_struct *work)
 {
-	struct tsens_sensor ts_sensor;
-	int temp = 0;
-	size_t i;
-	int added = 0, ret = 0;
-	char buffer[500] = { 0, };
+    struct tsens_sensor ts_sensor;
+    int temp = 0;
+    size_t i;
+    int added = 0, ret = 0;
+    char buffer[500] = { 0, };
 
-	ret = snprintf(buffer + added, sizeof(buffer) - added, "tsens");
-	added += ret;
+    ret = snprintf(buffer + added, sizeof(buffer) - added, "tsens");
+    added += ret;
 
-	/* print tsens0 (controller 0) */
-	ts_sensor.tmdev = ts_tmdev0;
-	for (i = 0; i < (sizeof(ts_print_num0) / sizeof(int)); i++) {
-		ts_sensor = ts_tmdev0->sensor[ts_print_num0[i]];
-		tsens_get_temp(&ts_sensor, &temp);
-		ret = snprintf(buffer + added, sizeof(buffer) - added,
-				   "[%d:%d]", ts_print_num0[i], temp/100);
-		added += ret;
-	}
+    /* print tsens0 (controller 0) */
+    ts_sensor.tmdev = ts_tmdev0;
+    for (i = 0; i < (sizeof(ts_print_num0) / sizeof(int)); i++) {
+        ts_sensor = ts_tmdev0->sensor[ts_print_num0[i]];
+        tsens_get_temp(&ts_sensor, &temp);
+        ret = snprintf(buffer + added, sizeof(buffer) - added,
+                   "[%d:%d]", ts_print_num0[i], temp/100);
+        added += ret;
+    }
 
-	/* print tsens0 (controller 1) */
-	ts_sensor.tmdev = ts_tmdev1;
-	for (i = 0; i < (sizeof(ts_print_num1) / sizeof(int)); i++) {
-		ts_sensor = ts_tmdev1->sensor[ts_print_num1[i]];
-		tsens_get_temp(&ts_sensor, &temp);
-		ret = snprintf(buffer + added, sizeof(buffer) - added,
-					   "[%d:%d]", ts_print_num1[i] + 15, temp/100);
-		added += ret;
-	}
+    /* print tsens0 (controller 1) */
+    ts_sensor.tmdev = ts_tmdev1;
+    for (i = 0; i < (sizeof(ts_print_num1) / sizeof(int)); i++) {
+        ts_sensor = ts_tmdev1->sensor[ts_print_num1[i]];
+        tsens_get_temp(&ts_sensor, &temp);
+        ret = snprintf(buffer + added, sizeof(buffer) - added,
+                       "[%d:%d]", ts_print_num1[i] + 15, temp/100);
+        added += ret;
+    }
 
-	pr_info("%s\n", buffer);
+    pr_info("%s\n", buffer);
 
-	schedule_delayed_work(&ts_print_work, HZ * 5);
+    schedule_delayed_work(&ts_print_work, HZ * 5);
 }
 #endif
 
@@ -427,11 +430,13 @@ static int tsens_tm_probe(struct platform_device *pdev)
 		ts_tmdev1 = tmdev;
 	}
 
+	#if IS_ENABLED(CONFIG_THERMAL_DEBUG)
 	if (ts_print_count == 0 && ts_tmdev1 != NULL) {
 		INIT_DELAYED_WORK(&ts_print_work, ts_print);
 		schedule_delayed_work(&ts_print_work, 0);
 		ts_print_count++;
 	}
+	#endif
 #endif
 
 	return rc;
