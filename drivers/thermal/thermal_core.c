@@ -30,11 +30,19 @@
 #include "thermal_core.h"
 #include "thermal_hwmon.h"
 
+#if !IS_ENABLED(CONFIG_THERMAL_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+#endif
+
 #if IS_ENABLED(CONFIG_SEC_PM)
 void *thermal_ipc_log;
 
+#if IS_ENABLED(CONFIG_THERMAL_DEBUG)
 /* cooling device state */
 static struct delayed_work cdev_print_work;
+#endif
+
 #endif
 
 MODULE_AUTHOR("Zhang Rui");
@@ -1736,6 +1744,7 @@ static inline void genetlink_exit(void) {}
 #define BUF_SIZE	SZ_1K
 static void __ref cdev_print(struct work_struct *work)
 {
+#if IS_ENABLED(CONFIG_THERMAL_DEBUG)
 	struct thermal_cooling_device *cdev;
 	unsigned long cur_state = 0;
 	int added = 0, ret = 0;
@@ -1760,6 +1769,7 @@ static void __ref cdev_print(struct work_struct *work)
 	pr_info("thermal: cdev%s\n", buffer);
 
 	schedule_delayed_work(&cdev_print_work, HZ * 5);
+#endif
 }
 #endif
 
@@ -1773,7 +1783,7 @@ static int thermal_pm_notify(struct notifier_block *nb,
 	case PM_HIBERNATION_PREPARE:
 	case PM_RESTORE_PREPARE:
 	case PM_SUSPEND_PREPARE:
-#if IS_ENABLED(CONFIG_SEC_PM)
+#if IS_ENABLED(CONFIG_SEC_PM) && IS_ENABLED(CONFIG_THERMAL_DEBUG)
 		cancel_delayed_work(&cdev_print_work);
 #endif
 		atomic_set(&in_suspend, 1);
@@ -1800,7 +1810,7 @@ static int thermal_pm_notify(struct notifier_block *nb,
 			thermal_zone_device_update(tz,
 						   THERMAL_EVENT_UNSPECIFIED);
 		}
-#if IS_ENABLED(CONFIG_SEC_PM)
+#if IS_ENABLED(CONFIG_SEC_PM) && IS_ENABLED(CONFIG_THERMAL_DEBUG)
 		schedule_delayed_work(&cdev_print_work, 0);
 #endif
 		break;
@@ -1848,10 +1858,11 @@ static int __init thermal_init(void)
 		pr_warn("Thermal: Can not register suspend notifier, return %d\n",
 			result);
 
-#if IS_ENABLED(CONFIG_SEC_PM)
+#if IS_ENABLED(CONFIG_SEC_PM) 
+#if IS_ENABLED(CONFIG_THERMAL_DEBUG)
 	INIT_DELAYED_WORK(&cdev_print_work, cdev_print);
 	schedule_delayed_work(&cdev_print_work, 0);
-
+#endif
 	if (!thermal_ipc_log)
 		thermal_ipc_log = ipc_log_context_create(10, "lmh_dcvs", 0);
 
@@ -1880,7 +1891,7 @@ error:
 
 static void thermal_exit(void)
 {
-#if IS_ENABLED(CONFIG_SEC_PM)
+#if IS_ENABLED(CONFIG_SEC_PM) && IS_ENABLED(CONFIG_THERMAL_DEBUG)
 	cancel_delayed_work_sync(&cdev_print_work);
 #endif
 	unregister_pm_notifier(&thermal_pm_nb);

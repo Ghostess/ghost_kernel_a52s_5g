@@ -20,6 +20,11 @@
 #include "sb_full_soc.h"
 #include "sec_battery.h"
 
+#if !IS_ENABLED(CONFIG_BATTERY_SAMSUNG_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+#endif
+
 struct sb_full_soc {
 	int full_capacity;
 	unsigned int full_cap_event;

@@ -34,6 +34,13 @@
 #include "../../../../battery/common/sec_charging_common.h"
 #endif
 
+#if !IS_ENABLED(CONFIG_PDIC_SM5714_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+  #undef dev_info
+  #define dev_info(dev, fmt, ...) do { } while (0)
+#endif
+
 static unsigned int SRC_CHECK_LIST[][3] = {
 	{MODE_MSG, MSG_GET_SRC_CAP, PE_SRC_Send_Capabilities},
 	{MODE_MSG, MSG_GET_SNK_CAP, PE_SRC_Give_Sink_Cap},

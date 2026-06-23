@@ -23,6 +23,14 @@
 #include <linux/of.h>
 #endif
 
+#if !IS_ENABLED(CONFIG_CPU_FREQ_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+
+  #undef pr_debug
+  #define pr_debug(fmt, ...) do { } while (0)
+#endif
+
 #define MAX_BUF_SIZE	1024
 #define MIN(a, b)     (((a) < (b)) ? (a) : (b))
 #define MAX(a, b)     (((a) > (b)) ? (a) : (b))

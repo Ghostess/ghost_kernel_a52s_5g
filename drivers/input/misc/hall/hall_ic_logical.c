@@ -27,6 +27,14 @@
 #include <linux/version.h>
 #include <linux/pm_wakeup.h>
 
+#if !IS_ENABLED(CONFIG_HALL_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+
+  #undef input_info
+  #define input_info(status, dev, fmt, ...) do { } while (0)
+#endif
+
 #if IS_ENABLED(CONFIG_KEYBOARD_STM32_POGO) || IS_ENABLED(CONFIG_KEYBOARD_STM32_POGO_V2) || IS_ENABLED(CONFIG_KEYBOARD_STM32_POGO_V3)
 #define POGO_NOTIFIER_ENABLED
 #endif

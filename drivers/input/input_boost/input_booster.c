@@ -7,6 +7,17 @@
 #include <linux/module.h>
 #include <linux/init.h>
 
+#if !IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+
+  #undef pr_err
+  #define pr_err(fmt, ...) do { } while (0)
+
+  #undef pr_booster
+  #define pr_booster(fmt, ...) do { } while (0)
+#endif
+
 #if IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_QC) || \
 	IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_SLSI) || \
 	IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_MTK)

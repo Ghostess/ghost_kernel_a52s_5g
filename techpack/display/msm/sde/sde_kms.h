@@ -47,6 +47,7 @@
  * SDE_DEBUG - macro for kms/plane/crtc/encoder/connector logs
  * @fmt: Pointer to format string
  */
+#if IS_ENABLED(CONFIG_DRM_MSM_SDE_DEBUG)
 #define SDE_DEBUG(fmt, ...)                                                \
 	do {                                                               \
 		if (unlikely(drm_debug & DRM_UT_KMS))                      \
@@ -80,6 +81,15 @@
 	} while (0)
 
 #define SDE_ERROR(fmt, ...) pr_err("[sde error]" fmt, ##__VA_ARGS__)
+
+#else
+
+#define SDE_DEBUG(fmt, ...) do { } while (0)
+#define SDE_INFO(fmt, ...) do { } while (0)
+#define SDE_DEBUG_DRIVER(fmt, ...) do { } while (0)
+#define SDE_ERROR(fmt, ...) do { } while (0)
+
+#endif // CONFIG_DRM_MSM_SDE_DEBUG
 
 #define POPULATE_RECT(rect, a, b, c, d, Q16_flag) \
 	do {						\

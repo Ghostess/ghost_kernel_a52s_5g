@@ -47,6 +47,11 @@
 #include <linux/vbus_notifier.h>
 #endif
 
+#if !IS_ENABLED(CONFIG_HALL_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+#endif
+
 /*
  * Switch events
  */

@@ -11,6 +11,11 @@
  */
 #include "sec_battery.h"
 
+#if !IS_ENABLED(CONFIG_BATTERY_SAMSUNG_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+#endif
+
 #if IS_ENABLED(CONFIG_MUIC_NOTIFIER)
 extern int muic_set_hiccup_mode(int on_off);
 #endif
