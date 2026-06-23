@@ -14,6 +14,14 @@
 
 #define DEBUG
 
+#if !IS_ENABLED(CONFIG_BATTERY_SAMSUNG_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+
+  #undef dev_info
+  #define dev_info(dev, fmt, ...) do { } while (0)
+#endif
+
 struct adc_list {
 	const char *name;
 	struct iio_channel *channel;

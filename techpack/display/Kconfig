@@ -1,0 +1,3 @@
+config DRM_MSM_SDE_DEBUG
+	bool
+	default n

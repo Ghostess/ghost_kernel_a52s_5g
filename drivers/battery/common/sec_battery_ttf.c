@@ -12,6 +12,14 @@
 #include "sec_battery.h"
 #include "sec_battery_ttf.h"
 
+#if !IS_ENABLED(CONFIG_BATTERY_SAMSUNG_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+
+  #undef dev_info
+  #define dev_info(dev, fmt, ...) do { } while (0)
+#endif
+
 #define is_ttf_thermal_zone(thermal_zone) ( \
 	thermal_zone == BAT_THERMAL_NORMAL || \
 	thermal_zone == BAT_THERMAL_COOL1 || \

@@ -17,6 +17,17 @@
 #include <linux/debugfs.h>
 #include <linux/seq_file.h>
 
+#if !IS_ENABLED(CONFIG_FUELGAUGE_SM5714_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+
+  #undef dev_info
+  #define dev_info(dev, fmt, ...) do { } while (0)
+
+  #undef pr_debug
+  #define pr_debug(fmt, ...) do { } while (0)
+#endif
+
 static enum power_supply_property sm5714_fuelgauge_props[] = {
 	POWER_SUPPLY_PROP_ONLINE,
 };

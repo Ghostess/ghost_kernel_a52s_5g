@@ -351,3 +351,8 @@ config QORIQ_CPUFREQ
 
 endif
 endmenu
+
+config CPU_FREQ_DEBUG
+	bool
+	default n
+	depends on CPU_FREQ

@@ -4,6 +4,11 @@
 #include <linux/mutex.h>
 #include <linux/debugfs.h>
 
+#if !IS_ENABLED(CONFIG_BATTERY_SAMSUNG_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+#endif
+
 static struct dentry *debug_root;
 static struct dentry *status_all;
 static LIST_HEAD(vote_list);

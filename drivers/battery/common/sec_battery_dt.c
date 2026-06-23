@@ -12,6 +12,10 @@
 #include "sec_battery.h"
 #include "sec_battery_dt.h"
 
+#if !IS_ENABLED(CONFIG_BATTERY_SAMSUNG_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+#endif
 
 #ifdef CONFIG_OF
 #define PROPERTY_NAME_SIZE 128

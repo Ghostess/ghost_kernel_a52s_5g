@@ -25,6 +25,11 @@
 #include <linux/cdev.h>
 #include "input-compat.h"
 
+#if !IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+#endif
+
 struct evdev {
 	int open;
 	struct input_handle handle;

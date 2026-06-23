@@ -36,6 +36,13 @@
 #include "../../../../battery/common/sec_charging_common.h"
 #endif
 
+#if !IS_ENABLED(CONFIG_PDIC_SM5714_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+  #undef dev_info
+  #define dev_info(dev, fmt, ...) do { } while (0)
+#endif
+
 struct sm5714_usbpd_data *sm5714_g_pd_data;
 
 void sm5714_usbpd_inform_pdo_list(void);
