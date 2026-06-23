@@ -15,3 +15,8 @@ config SHIPMODE_BY_VBAT
 	  support for SHIPMODE_BY_VBAT.
 	  CHARGER_SM5714 only supports this checking options.
 	  this is for shipmode by vbat.
+
+config CHARGER_SM5714_DEBUG
+	bool
+	default n
+	depends on CHARGER_SM5714

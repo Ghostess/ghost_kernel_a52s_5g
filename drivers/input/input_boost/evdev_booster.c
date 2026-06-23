@@ -8,6 +8,15 @@
 #include <linux/syscalls.h>
 
 #if IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER)
+
+#if !IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+
+  #undef pr_booster
+  #define pr_booster(fmt, ...) do { } while (0)
+#endif
+
 spinlock_t ib_ev_lock;
 struct workqueue_struct *ev_unbound_wq;
 static struct device *evbst_dev;

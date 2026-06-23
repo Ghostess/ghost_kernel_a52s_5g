@@ -14,3 +14,8 @@ config UI_SOC_PROLONGING
 	  Say Y here to enable
 	  Support for UI Soc prolonging.
 	  This is to enable UI Soc prolonging concept.
+
+config FUELGAUGE_SM5714_DEBUG
+    bool
+	default n
+	depends on FUELGAUGE_SM5714

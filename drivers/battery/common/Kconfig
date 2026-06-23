@@ -361,3 +361,8 @@ config SBP_FG
 	  Support for SBP FUELGAUGE.
 
 endmenu
+
+config BATTERY_SAMSUNG_DEBUG
+	bool
+	default n
+	depends on BATTERY_SAMSUNG

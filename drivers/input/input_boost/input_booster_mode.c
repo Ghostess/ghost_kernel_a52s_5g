@@ -7,6 +7,17 @@
 #include <linux/module.h>
 #include <linux/init.h>
 
+#if !IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+
+  #undef pr_err
+  #define pr_err(fmt, ...) do { } while (0)
+
+  #undef pr_booster
+  #define pr_booster(fmt, ...) do { } while (0)
+#endif
+
 #if IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_QC) || \
 	IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_SLSI) || \
 	IS_ENABLED(CONFIG_SEC_INPUT_BOOSTER_MTK)
@@ -79,7 +90,7 @@ void trigger_input_booster(struct work_struct *work)
 	if (p_IbTrigger->event_type == BOOSTER_ON) {
 		if (find_release_ib(p_IbTrigger->dev_type, p_IbTrigger->key_id) != NULL) {
 			pr_err(ITAG" IB Trigger :: ib already exist. Key(%d)\n", p_IbTrigger->key_id);
-			mutex_unlock(&trigger_ib_lock);
+						mutex_unlock(&trigger_ib_lock);
 			return;
 		}
 		// Check if uniqId exits.

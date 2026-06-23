@@ -17,6 +17,11 @@
 #define __visible_for_testing static
 #endif
 
+#if !IS_ENABLED(CONFIG_BATTERY_SAMSUNG_DEBUG)
+  #undef pr_info
+  #define pr_info(fmt, ...) do { } while (0)
+#endif
+
 #ifdef CONFIG_OF
 #define PROPERTY_NAME_SIZE 128
 int sec_bat_parse_dt_siop(
