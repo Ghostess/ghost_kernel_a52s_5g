@@ -36,6 +36,7 @@
 *.o
 *.o.*
 *.patch
+!custom-patches/*.patch
 *.s
 *.so
 *.so.dbg

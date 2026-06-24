@@ -1,0 +1,158 @@
+From d7942a9cb3072e8f5dc73c2c635f2bf2ab7472cb Mon Sep 17 00:00:00 2001
+From: Ghostess <72419159+Ghostess@users.noreply.github.com>
+Date: Mon, 22 Jun 2026 05:15:34 +0000
+Subject: [PATCH] add full droidspaces support
+
+---
+ .../vendor/a52sxq_kor_single_defconfig        | 27 +++++++++++++------
+ include/linux/sched.h                         | 10 +++++--
+ include/linux/sched/user.h                    |  9 +++++--
+ 3 files changed, 34 insertions(+), 12 deletions(-)
+
+diff --git a/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig b/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig
+index 445fe4410d1d..6e12c16f86d2 100644
+--- a/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig
++++ b/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig
+@@ -28,8 +28,8 @@ CONFIG_LOCALVERSION="-Ghost"
+ CONFIG_BUILD_SALT=""
+ CONFIG_DEFAULT_HOSTNAME="(none)"
+ CONFIG_SWAP=y
+-# CONFIG_SYSVIPC is not set
+-# CONFIG_POSIX_MQUEUE is not set
++CONFIG_SYSVIPC=y
++CONFIG_POSIX_MQUEUE=y
+ CONFIG_CROSS_MEMORY_ATTACH=y
+ # CONFIG_USELIB is not set
+ CONFIG_AUDIT=y
+@@ -164,7 +164,7 @@ CONFIG_SOCK_CGROUP_DATA=y
+ CONFIG_NAMESPACES=y
+ CONFIG_UTS_NS=y
+ # CONFIG_USER_NS is not set
+-# CONFIG_PID_NS is not set
++CONFIG_PID_NS=y
+ CONFIG_NET_NS=y
+ # CONFIG_CHECKPOINT_RESTORE is not set
+ # CONFIG_SCHED_AUTOGROUP is not set
+@@ -1112,7 +1112,7 @@ CONFIG_NETFILTER_XT_TARGET_TCPMSS=y
+ #
+ # Xtables matches
+ #
+-# CONFIG_NETFILTER_XT_MATCH_ADDRTYPE is not set
++CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y
+ CONFIG_NETFILTER_XT_MATCH_BPF=y
+ # CONFIG_NETFILTER_XT_MATCH_CGROUP is not set
+ # CONFIG_NETFILTER_XT_MATCH_CLUSTER is not set
+@@ -1149,7 +1149,7 @@ CONFIG_NETFILTER_XT_MATCH_QUOTA2=y
+ CONFIG_NETFILTER_XT_MATCH_QUOTA2_LOG=y
+ # CONFIG_NETFILTER_XT_MATCH_RATEEST is not set
+ # CONFIG_NETFILTER_XT_MATCH_REALM is not set
+-# CONFIG_NETFILTER_XT_MATCH_RECENT is not set
++CONFIG_NETFILTER_XT_MATCH_RECENT=y
+ # CONFIG_NETFILTER_XT_MATCH_SCTP is not set
+ CONFIG_NETFILTER_XT_MATCH_SOCKET=y
+ CONFIG_NETFILTER_XT_MATCH_STATE=y
+@@ -1160,7 +1160,7 @@ CONFIG_NETFILTER_XT_MATCH_TIME=y
+ CONFIG_NETFILTER_XT_MATCH_U32=y
+ # end of Core Netfilter Configuration
+ 
+-# CONFIG_IP_SET is not set
++CONFIG_IP_SET=y
+ # CONFIG_IP_VS is not set
+ 
+ #
+@@ -1610,7 +1610,7 @@ CONFIG_SEC_PCIE_L1SS=y
+ # Generic Driver Options
+ #
+ # CONFIG_UEVENT_HELPER is not set
+-# CONFIG_DEVTMPFS is not set
++CONFIG_DEVTMPFS=y
+ CONFIG_STANDALONE=y
+ CONFIG_PREVENT_FIRMWARE_BUILD=y
+ 
+@@ -6588,7 +6588,7 @@ CONFIG_PROC_DLOG=y
+ CONFIG_KERNFS=y
+ CONFIG_SYSFS=y
+ CONFIG_TMPFS=y
+-# CONFIG_TMPFS_POSIX_ACL is not set
++CONFIG_TMPFS_POSIX_ACL=y
+ CONFIG_TMPFS_XATTR=y
+ # CONFIG_HUGETLBFS is not set
+ CONFIG_MEMFD_CREATE=y
+@@ -7405,3 +7405,14 @@ CONFIG_DISPLAY_SAMSUNG=y
+ # CONFIG_PARTIAL_UPDATE is not set
+ # CONFIG_CABC_FUNCTION is not set
+ # CONFIG_SUPPORT_POC_FLASH is not set
++
++# Kernel configurations for full DroidSpaces support
++
++# Namespaces
++CONFIG_IPC_NS=y
++CONFIG_NETFILTER_XT_TARGET_REJECT=y
++
++# Fail2ban support
++CONFIG_IP_SET_HASH_IP=y
++CONFIG_IP_SET_HASH_NET=y
++CONFIG_NETFILTER_XT_SET=y
+\ No newline at end of file
+diff --git a/include/linux/sched.h b/include/linux/sched.h
+index e0871867d7bc..836186e6a199 100644
+--- a/include/linux/sched.h
++++ b/include/linux/sched.h
+@@ -1080,8 +1080,8 @@ struct task_struct {
+ 	struct nameidata		*nameidata;
+ 
+ #ifdef CONFIG_SYSVIPC
+-	struct sysv_sem			sysvsem;
+-	struct sysv_shm			sysvshm;
++	// struct sysv_sem			sysvsem;
++	// struct sysv_shm			sysvshm;
+ #endif
+ #ifdef CONFIG_DETECT_HUNG_TASK
+ 	/* hung task detection */
+@@ -1481,9 +1481,15 @@ struct task_struct {
+ 	ANDROID_KABI_RESERVE(3);
+ 	ANDROID_KABI_RESERVE(4);
+ 	ANDROID_KABI_RESERVE(5);
++
++#ifdef CONFIG_SYSVIPC
++	ANDROID_KABI_USE(6, struct sysv_sem sysvsem);
++	_ANDROID_KABI_REPLACE(ANDROID_KABI_RESERVE(7); ANDROID_KABI_RESERVE(8), struct sysv_shm sysvshm);
++#else
+ 	ANDROID_KABI_RESERVE(6);
+ 	ANDROID_KABI_RESERVE(7);
+ 	ANDROID_KABI_RESERVE(8);
++#endif
+ 
+ 	/*
+ 	 * New fields for task_struct should be added above here, so that
+diff --git a/include/linux/sched/user.h b/include/linux/sched/user.h
+index 573b448e07ac..f7c0972aff00 100644
+--- a/include/linux/sched/user.h
++++ b/include/linux/sched/user.h
+@@ -23,7 +23,7 @@ struct user_struct {
+ #endif
+ #ifdef CONFIG_POSIX_MQUEUE
+ 	/* protected by mq_lock	*/
+-	unsigned long mq_bytes;	/* How many bytes can be allocated to mqueue? */
++	//unsigned long mq_bytes;	/* How many bytes can be allocated to mqueue? */
+ #endif
+ 	unsigned long locked_shm; /* How many pages of mlocked shm ? */
+ 	unsigned long unix_inflight;	/* How many files in flight in unix sockets */
+@@ -41,8 +41,13 @@ struct user_struct {
+ 	/* Miscellaneous per-user rate limit */
+ 	struct ratelimit_state ratelimit;
+ 
+-	ANDROID_KABI_RESERVE(1);
++	#if defined(CONFIG_POSIX_MQUEUE)
++	ANDROID_KABI_USE(1, unsigned long mq_bytes);
+ 	ANDROID_KABI_RESERVE(2);
++	#else
++ 	ANDROID_KABI_RESERVE(1);
++ 	ANDROID_KABI_RESERVE(2);
++	#endif
+ };
+ 
+ extern int uids_sysfs_init(void);
+-- 
+2.43.0
+
