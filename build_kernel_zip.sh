@@ -411,6 +411,9 @@ mkdir -p lib/firmware/tsp_stm
 cp "${FIRMWARE_SRC}"/fts5cu56a_a52sxq* lib/firmware/tsp_stm/ \
     || die "Failed to copy firmware files"
 
+# Copy our modified fstab file
+cp "${STOCK_IMAGES_DIR}/first_stage_ramdisk/fstab-patched.qcom" first_stage_ramdisk/fstab.qcom
+
 # Fix permissions
 find . -type d -exec chmod 755 '{}' \;
 find . -type f -exec chmod 644 '{}' \;
