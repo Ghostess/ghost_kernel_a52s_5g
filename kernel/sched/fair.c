@@ -6459,7 +6459,7 @@ select_idle_capacity(struct task_struct *p, struct sched_domain *sd, int target)
 
 	task_util = uclamp_task_util(p);
 
-	for_each_cpu_wrap(cpu, cpus, target) {
+	for_each_cpu_wrap(cpu, cpus, target + 1) {
 		unsigned long cpu_cap = capacity_of(cpu);
 
 		if ((!available_idle_cpu(cpu) && !sched_idle_cpu(cpu)) ||
