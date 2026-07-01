@@ -1,16 +1,5 @@
-From d7942a9cb3072e8f5dc73c2c635f2bf2ab7472cb Mon Sep 17 00:00:00 2001
-From: Ghostess <72419159+Ghostess@users.noreply.github.com>
-Date: Mon, 22 Jun 2026 05:15:34 +0000
-Subject: [PATCH] add full droidspaces support
-
----
- .../vendor/a52sxq_kor_single_defconfig        | 27 +++++++++++++------
- include/linux/sched.h                         | 10 +++++--
- include/linux/sched/user.h                    |  9 +++++--
- 3 files changed, 34 insertions(+), 12 deletions(-)
-
 diff --git a/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig b/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig
-index 445fe4410d1d..6e12c16f86d2 100644
+index c649f440ac84..bc3fc127d9d3 100644
 --- a/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig
 +++ b/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig
 @@ -28,8 +28,8 @@ CONFIG_LOCALVERSION="-Ghost"
@@ -78,22 +67,20 @@ index 445fe4410d1d..6e12c16f86d2 100644
  CONFIG_TMPFS_XATTR=y
  # CONFIG_HUGETLBFS is not set
  CONFIG_MEMFD_CREATE=y
-@@ -7405,3 +7405,14 @@ CONFIG_DISPLAY_SAMSUNG=y
- # CONFIG_PARTIAL_UPDATE is not set
- # CONFIG_CABC_FUNCTION is not set
- # CONFIG_SUPPORT_POC_FLASH is not set
-+
-+# Kernel configurations for full DroidSpaces support
-+
+@@ -7413,4 +7413,13 @@ CONFIG_DISPLAY_SAMSUNG=y
+ # NTSync module (m or n)
+ CONFIG_NTSYNC=m
+ 
++# Kernel configurations for full Droidspaces support
 +# Namespaces
 +CONFIG_IPC_NS=y
 +CONFIG_NETFILTER_XT_TARGET_REJECT=y
-+
 +# Fail2ban support
 +CONFIG_IP_SET_HASH_IP=y
 +CONFIG_IP_SET_HASH_NET=y
 +CONFIG_NETFILTER_XT_SET=y
-\ No newline at end of file
++
+ # End of Custom additions
 diff --git a/include/linux/sched.h b/include/linux/sched.h
 index e0871867d7bc..836186e6a199 100644
 --- a/include/linux/sched.h
@@ -147,12 +134,9 @@ index 573b448e07ac..f7c0972aff00 100644
 +	ANDROID_KABI_USE(1, unsigned long mq_bytes);
  	ANDROID_KABI_RESERVE(2);
 +	#else
-+ 	ANDROID_KABI_RESERVE(1);
-+ 	ANDROID_KABI_RESERVE(2);
++	ANDROID_KABI_RESERVE(1);
++	ANDROID_KABI_RESERVE(2);
 +	#endif
  };
  
  extern int uids_sysfs_init(void);
--- 
-2.43.0
-
