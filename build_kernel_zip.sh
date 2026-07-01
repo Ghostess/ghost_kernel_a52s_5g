@@ -406,11 +406,12 @@ rm -f lib/modules/modules.alias \
       lib/modules/modules.load \
       lib/modules/modules.softdep
 # Wipe contents of any *-gki dirs including dotfiles, preserving the directories themselves
-find lib/modules -maxdepth 1 -type d -name '*-gki' -print0 |
-    while IFS= read -r -d '' gki_dir; do
-        find "${gki_dir:?}" -mindepth 1 -delete
-    done
-
+if [ -d "lib/modules" ]; then
+    find lib/modules -maxdepth 1 -type d -name '*-gki' -print0 |
+        while IFS= read -r -d '' gki_dir; do
+            find "${gki_dir:?}" -mindepth 1 -delete
+        done
+fi
 # Copy fresh .ko files flat into lib/modules/
 mkdir -p lib/modules
 find "${MODULES_VERSIONED_DIR}" -name "*.ko" -exec cp -t lib/modules/ {} + \
