@@ -2,13 +2,15 @@ name: Build Kernel (PR)
 
 on:
   pull_request:
-    branches:
-      - ksu-next
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   build:
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        rom_target: [oneui, aosp]
+      fail-fast: false
 
     steps:
       - name: Checkout repository
@@ -43,7 +45,7 @@ jobs:
       - name: Compile Kernel
         run: |
           chmod +x ./build_kernel_zip.sh
-          ./build_kernel_zip.sh
+          ./build_kernel_zip.sh "${{ matrix.rom_target }}"
           
       - name: Set sha_short env variable
         run: echo "sha_short=`git rev-parse --short HEAD`" >> $GITHUB_ENV
