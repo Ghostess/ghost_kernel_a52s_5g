@@ -7406,4 +7406,11 @@ CONFIG_DISPLAY_SAMSUNG=y
 # CONFIG_CABC_FUNCTION is not set
 # CONFIG_SUPPORT_POC_FLASH is not set
 
+#
+# Custom additions
+#
+
+# NTSync module (m or n)
 CONFIG_NTSYNC=m
+
+# End of Custom additions
