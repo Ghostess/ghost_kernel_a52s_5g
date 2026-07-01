@@ -20,8 +20,12 @@ die()     { echo -e "${RED}${BOLD}[ERR]${NC}   $*" >&2; exit 1; }
 TMP_CLANG=""
 TMP_MAGISK=""
 cleanup_tmp() {
-    [[ -n "$TMP_CLANG"  && -d "$TMP_CLANG"  ]] && rm -rf "$TMP_CLANG"
-    [[ -n "$TMP_MAGISK" && -d "$TMP_MAGISK" ]] && rm -rf "$TMP_MAGISK"
+    if [[ -n "$TMP_CLANG" && -d "$TMP_CLANG" ]]; then
+        rm -rf "$TMP_CLANG"
+    fi
+    if [[ -n "$TMP_MAGISK" && -d "$TMP_MAGISK" ]]; then
+        rm -rf "$TMP_MAGISK"
+    fi
 }
 trap cleanup_tmp EXIT
 

@@ -43,15 +43,7 @@ jobs:
       - name: Compile Kernel
         run: |
           chmod +x ./build_kernel_zip.sh
-          ./build_kernel_zip.sh || true
-
-      # cause we continue on error (it was erroring on success so this is better i guess)
-      - name: Check if kernel zip exists 
-        run: |
-          zips=( *.zip )
-          if [ ! -e "${zips[0]}" ]; then
-              exit 1
-          fi
+          ./build_kernel_zip.sh
           
       - name: Set sha_short env variable
         run: echo "sha_short=`git rev-parse --short HEAD`" >> $GITHUB_ENV
