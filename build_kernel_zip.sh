@@ -50,9 +50,7 @@ TOOLCHAIN_DIR="${KERNEL_ROOT}/toolchain"
 CLANG_DIR="${TOOLCHAIN_DIR}/clang"
 MAGISKBOOT_BIN="${TOOLCHAIN_DIR}/magiskboot/magiskboot"
 OUT_DIR="${KERNEL_ROOT}/out"
-STOCK_IMAGES_DIR="${KERNEL_ROOT}/stock"
-MAGISKBOOT_BOOT_DIR="${STOCK_IMAGES_DIR}/boot"
-MAGISKBOOT_VENDOR_DIR="${STOCK_IMAGES_DIR}/vendor_boot"
+BASE_IMAGES_DIR="${KERNEL_ROOT}/base-images"
 TEMPLATE_ZIP_DIR="${KERNEL_ROOT}/template-zip-file"
 IMAGES_DIR="${TEMPLATE_ZIP_DIR}/images"
 UPDATE_BINARY="${TEMPLATE_ZIP_DIR}/META-INF/com/google/android/update-binary"
@@ -96,9 +94,25 @@ check_glob() {
     fi
 }
 
-# Stock boot images
-check_file "${MAGISKBOOT_BOOT_DIR}/boot.img"             "Stock boot image"
-check_file "${MAGISKBOOT_VENDOR_DIR}/vendor_boot.img"    "Stock vendor_boot image"
+MAGISKBOOT_BOOT_DIR="${BASE_IMAGES_DIR}/oneui/boot"
+MAGISKBOOT_VENDOR_DIR="${BASE_IMAGES_DIR}/oneui/vendor_boot"
+INPUT="${1:-}"
+INPUT="${INPUT,,}" # make input lowercase
+case "$INPUT" in
+    oneui)  ROM_TYPE="One-UI" ;;
+    aosp) ROM_TYPE="AOSP"
+    MAGISKBOOT_BOOT_DIR="${BASE_IMAGES_DIR}/aosp/boot"
+    MAGISKBOOT_VENDOR_DIR="${BASE_IMAGES_DIR}/aosp/vendor_boot"
+    ;;
+    *)
+    warn "Input '$INPUT' doesn't match any known ROM type — defaulting to One-UI"
+    ROM_TYPE="One-UI"
+    ;;
+esac
+
+# Check boot images
+check_file "${MAGISKBOOT_BOOT_DIR}/boot.img"             "boot image"
+check_file "${MAGISKBOOT_VENDOR_DIR}/vendor_boot.img"    "vendor_boot image"
 
 # Flashable zip template
 check_file "${UPDATE_BINARY}"                            "update-binary"
