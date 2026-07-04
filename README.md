@@ -4,7 +4,7 @@ Linux 5.4.254, built with Clang 19.0-r530567 (plus other compilation optimizatio
 
 ### Features
 - KernelSU-Next as the root solution (manual hooks)
-- Supports both AOSP* and One UI roms**
+- Supports both AOSP* and One UI** roms
 - Optimized for battery life and performance
 - Disabled several kernel debugging tools, flags, and features
 - Enabled CONFIG_TMPFS_XATTR for [mountify](https://github.com/backslashxx/mountify) KernelSU module mounting compatibility
@@ -23,7 +23,7 @@ I am NOT a kernel developer. this is just my personal kernel that i made for mys
 ---
 
 # Installation
-1. Download the appropriate flashable .zip file from the Releases (Or Github Actions for nightly builds)
+1. Download the appropriate flashable .zip file from the [Releases](https://github.com/Ghostess/android_kernel_samsung_sm7325/releases/) (Or [Github Actions](https://github.com/Ghostess/android_kernel_samsung_sm7325/actions) for nightly builds)
    - `*_AOSP_*.zip` for AOSP-based ROMs
    - `*_One-UI_*.zip` for Samsung One UI ROMs
 2. Reboot into your recovery environment (see [TWRP](https://xdaforums.com/t/recovery-official-twrp-3-7-1-0-for-galaxy-a52s-5g.4488419/))
