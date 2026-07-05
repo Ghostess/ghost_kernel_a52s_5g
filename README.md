@@ -282,3 +282,5 @@ I also used bone-machine's README as the base for my own (his detailed build ins
 - https://opensource.samsung.com/uploadList?menuItem=mobile (SM-A736B, SM-A528B, SM-A528N)
 
 - https://git.codelinaro.org/clo/la/kernel/msm-5.4
+
+- https://github.com/WildKernels/kernel_patches/
