@@ -11,6 +11,7 @@ Linux 5.4.254, built with Clang 19.0-r530567 (plus other compilation optimizatio
 - Disabled Samsung Knox
 - Switchable SELinux policy
 - Backported NTSync*** (for better performance in Winlator/GameNative/etc)
+- Full [Droidspaces](https://github.com/ravindu644/Droidspaces-OSS) support
 
 > Compatibility Notes: <br>
 > \* Is fully untested, I don't know if it works or not. <br>
