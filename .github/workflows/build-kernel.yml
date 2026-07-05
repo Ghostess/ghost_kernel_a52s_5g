@@ -3,16 +3,14 @@ name: Build Kernel
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths-ignore:
       - 'README.md'
 
 jobs:
   build:
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        rom_target: [oneui, aosp]
-      fail-fast: false
 
     steps:
       - name: Checkout repository
@@ -45,18 +43,15 @@ jobs:
       - name: Compile Kernel
         run: |
           chmod +x ./build_kernel_zip.sh
-          ./build_kernel_zip.sh "${{ matrix.rom_target }}"
+          ./build_kernel_zip.sh
 
-      - name: Upload Kernel
+      - name: Set sha_short env variable
+        run: echo "sha_short=`git rev-parse --short HEAD`" >> $GITHUB_ENV
+
+      - name: Upload Release Artifact
         uses: actions/upload-artifact@v7
         with:
-          path: "*.zip"
-          archive: false
+          name: "ghost_kernel-${{ env.sha_short }}"
+          path: "release/"
           compression-level: 0
-
-      - name: Upload build config
-        uses: actions/upload-artifact@v7
-        with:
-          path: "out/.config"
           include-hidden-files: true
-          archive: false
