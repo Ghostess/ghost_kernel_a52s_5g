@@ -2,7 +2,6 @@
 # ===================================================================================
 # build_kernel_zip.sh
 # Automated kernel build + flashable zip script from bone-machine's A52s 5G kernel
-# Must be run from the kernel root directory (android_kernel_samsung_sm7325/)
 # ===================================================================================
 
 set -euo pipefail
@@ -32,7 +31,6 @@ trap cleanup_tmp EXIT
 # ─── Derived build metadata ───────────────────────────────────────────────────
 SHA=$(git rev-parse --short HEAD)
 BUILD_DATE="$(date +%Y-%m-%d)"
-ROM_TYPE="One-UI"
 
 # ─── Hardcoded config ─────────────────────────────────────────────────────────
 AUTHOR="ghost"
@@ -50,14 +48,13 @@ TOOLCHAIN_DIR="${KERNEL_ROOT}/toolchain"
 CLANG_DIR="${TOOLCHAIN_DIR}/clang"
 MAGISKBOOT_BIN="${TOOLCHAIN_DIR}/magiskboot/magiskboot"
 OUT_DIR="${KERNEL_ROOT}/out"
+RELEASE_DIR="${KERNEL_ROOT}/release"
 BASE_IMAGES_DIR="${KERNEL_ROOT}/base-images"
 TEMPLATE_ZIP_DIR="${KERNEL_ROOT}/template-zip-file"
 IMAGES_DIR="${TEMPLATE_ZIP_DIR}/images"
 UPDATE_BINARY="${TEMPLATE_ZIP_DIR}/META-INF/com/google/android/update-binary"
 
 # ─── Sanity checks ────────────────────────────────────────────────────────────
-[[ "$(basename "$KERNEL_ROOT")" == "android_kernel_samsung_sm7325" ]] \
-    || die "Run this script from the kernel root (android_kernel_samsung_sm7325/)"
 
 for cmd in curl unzip zip cpio find sed git uname tar grep nproc cp chmod depmod; do
     command -v "$cmd" &>/dev/null || die "Required command not found: $cmd"
@@ -94,33 +91,19 @@ check_glob() {
     fi
 }
 
-MAGISKBOOT_BOOT_DIR="${BASE_IMAGES_DIR}/oneui/boot"
-MAGISKBOOT_VENDOR_DIR="${BASE_IMAGES_DIR}/oneui/vendor_boot"
-INPUT="${1:-}"
-INPUT="${INPUT,,}" # make input lowercase
-case "$INPUT" in
-    oneui)  ROM_TYPE="One-UI" ;;
-    aosp) ROM_TYPE="AOSP"
-    MAGISKBOOT_BOOT_DIR="${BASE_IMAGES_DIR}/aosp/boot"
-    MAGISKBOOT_VENDOR_DIR="${BASE_IMAGES_DIR}/aosp/vendor_boot"
-    ;;
-    *)
-    warn "Input '$INPUT' doesn't match any known ROM type — defaulting to One-UI"
-    ROM_TYPE="One-UI"
-    ;;
-esac
-
-# Check boot images
-check_file "${MAGISKBOOT_BOOT_DIR}/boot.img"             "boot image"
-check_file "${MAGISKBOOT_VENDOR_DIR}/vendor_boot.img"    "vendor_boot image"
+# Check boot images for BOTH targets to fail early if missing
+check_file "${BASE_IMAGES_DIR}/oneui/boot/boot.img"               "One-UI boot image"
+check_file "${BASE_IMAGES_DIR}/oneui/vendor_boot/vendor_boot.img" "One-UI vendor_boot image"
+check_file "${BASE_IMAGES_DIR}/aosp/boot/boot.img"                "AOSP boot image"
+check_file "${BASE_IMAGES_DIR}/aosp/vendor_boot/vendor_boot.img"  "AOSP vendor_boot image"
 
 # Flashable zip template
 check_file "${UPDATE_BINARY}"                            "update-binary"
-check_dir  "${IMAGES_DIR}"                              "Flashable zip images dir"
-check_dir  "${TEMPLATE_ZIP_DIR}/META-INF"               "Flashable zip META-INF dir"
+check_dir  "${IMAGES_DIR}"                               "Flashable zip images dir"
+check_dir  "${TEMPLATE_ZIP_DIR}/META-INF"                "Flashable zip META-INF dir"
 
 # Firmware
-check_dir  "${KERNEL_ROOT}/firmware/tsp_stm"            "Firmware source dir"
+check_dir  "${KERNEL_ROOT}/firmware/tsp_stm"             "Firmware source dir"
 check_glob "${KERNEL_ROOT}/firmware/tsp_stm/fts5cu56a_a52sxq*" "TSP firmware file"
 
 # Kernel defconfig
@@ -150,13 +133,6 @@ if [[ "$KSU_VERSION" == "none" ]]; then
     ROOT_DISPLAY="none"
 else
     ROOT_DISPLAY="KernelSU-Next ${KSU_VERSION}"
-fi
-
-# ZIP name: drop the KSU-Next segment on branches that don't ship it
-if [[ "$KSU_VERSION" == "none" ]]; then
-    ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${DEVICE}_${SHA}.zip"
-else
-    ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_KSU-Next-${KSU_VERSION}_${DEVICE}_${SHA}.zip"
 fi
 
 # ─── Step 2: Clang toolchain ──────────────────────────────────────────────────
@@ -224,9 +200,11 @@ export PATH="${CLANG_DIR}/bin:$(dirname "$MAGISKBOOT_BIN"):$PATH"
 info "PATH updated: Clang and magiskboot directories prepended"
 
 # ─── Step 5: Clean previous build ────────────────────────────────────────────
-info "Wiping out/ from previous build..."
+info "Wiping out/ and release/ from previous build..."
 rm -rf "${OUT_DIR}"
-success "Clean done"
+rm -rf "${RELEASE_DIR}"
+mkdir -p "${RELEASE_DIR}"
+success "Clean done and release folder prepared"
 
 # ─── Step 6: Defconfig ───────────────────────────────────────────────────────
 info "Generating defconfig..."
@@ -249,6 +227,10 @@ make -j"$(nproc)" \
     CONFIG_SECTION_MISMATCH_WARN_ONLY=y \
     || die "Kernel build failed"
 success "Kernel build complete"
+
+info "Exporting .config to release folder..."
+cp "${OUT_DIR}/.config" "${RELEASE_DIR}/" || die "Failed to copy .config to release folder"
+success ".config exported"
 
 # ─── Step 8: Install and strip modules, generate module metadata ──────────────
 info "Installing kernel modules..."
@@ -345,139 +327,166 @@ success "Modules installed, stripped, and metadata generated: ${MODULE_COUNT} fi
 KERNEL_IMAGE="${OUT_DIR}/arch/arm64/boot/Image"
 [[ -f "$KERNEL_IMAGE" ]] || die "Kernel Image missing after build — check build logs"
 
-# ─── Step 9: boot.img ────────────────────────────────────────────────────────
-find "${IMAGES_DIR}" -mindepth 1 -delete
-info "Repacking boot.img..."
-cd "${MAGISKBOOT_BOOT_DIR}" || die "Missing ${MAGISKBOOT_BOOT_DIR}"
-rm -f kernel ramdisk.cpio new-boot.img
-magiskboot unpack boot.img || die "magiskboot unpack boot.img failed"
+SUCCESSFUL_ZIPS=()
 
-cp "$KERNEL_IMAGE" kernel
+# ─── Master Loop: Pack One-UI then AOSP ──────────────────────────────────────
+for ROM_TYPE in "One-UI" "AOSP"; do
+    echo ""
+    info "=========================================================="
+    info " Starting packing phase for ${ROM_TYPE}..."
+    info "=========================================================="
 
-magiskboot repack boot.img || die "magiskboot repack boot.img failed"
-mkdir -p "${IMAGES_DIR}"
-cp new-boot.img "${IMAGES_DIR}/boot.img" || die "new-boot.img not found after repack"
-# Clean up unpacked artefacts left by magiskboot (kernel, ramdisk.cpio, new-boot.img)
-rm -f kernel ramdisk.cpio new-boot.img
-cd "${KERNEL_ROOT}"
-success "boot.img repacked and placed in ${IMAGES_DIR}/"
+    if [[ "$ROM_TYPE" == "One-UI" ]]; then
+        MAGISKBOOT_BOOT_DIR="${BASE_IMAGES_DIR}/oneui/boot"
+        MAGISKBOOT_VENDOR_DIR="${BASE_IMAGES_DIR}/oneui/vendor_boot"
+    else
+        MAGISKBOOT_BOOT_DIR="${BASE_IMAGES_DIR}/aosp/boot"
+        MAGISKBOOT_VENDOR_DIR="${BASE_IMAGES_DIR}/aosp/vendor_boot"
+    fi
 
-# ─── Step 10: dtbo.img ───────────────────────────────────────────────────────
-info "Copying dtbo.img..."
-DTBO_SRC="${OUT_DIR}/arch/arm64/boot/dtbo.img"
-[[ -f "$DTBO_SRC" ]] || die "dtbo.img not found at ${DTBO_SRC}"
-cp "$DTBO_SRC" "${IMAGES_DIR}/dtbo.img"
-success "dtbo.img placed in ${IMAGES_DIR}/"
+    # ZIP name: drop the KSU-Next segment on branches that don't ship it
+    if [[ "$KSU_VERSION" == "none" ]]; then
+        ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${DEVICE}_${SHA}.zip"
+    else
+        ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_KSU-Next-${KSU_VERSION}_${DEVICE}_${SHA}.zip"
+    fi
 
-# ─── Step 11: vendor_boot.img ────────────────────────────────────────────────
-info "Repacking vendor_boot.img..."
-cd "${MAGISKBOOT_VENDOR_DIR}" || die "Missing ${MAGISKBOOT_VENDOR_DIR}"
-rm -f dtb header ramdisk.cpio new-boot.img
-rm -rf ramdisk
-set +e
-magiskboot unpack -h vendor_boot.img
-ret=$?
-set -e
+    # ─── Step 9: boot.img ────────────────────────────────────────────────────────
+    find "${IMAGES_DIR}" -mindepth 1 -delete
+    info "Repacking boot.img..."
+    cd "${MAGISKBOOT_BOOT_DIR}" || die "Missing ${MAGISKBOOT_BOOT_DIR}"
+    rm -f kernel ramdisk.cpio new-boot.img
+    magiskboot unpack boot.img || die "magiskboot unpack boot.img failed"
 
-if [[ "$ret" -ne 0 && "$ret" -ne 3 ]]; then
-    die "magiskboot unpack vendor_boot.img failed (exit code $ret)"
-fi
+    cp "$KERNEL_IMAGE" kernel
 
-# Replace dtb with yupik.dtb
-YUPIK_DTB="${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom/yupik.dtb"
-[[ -f "$YUPIK_DTB" ]] || die "yupik.dtb not found at ${YUPIK_DTB}"
-cp "$YUPIK_DTB" dtb
+    magiskboot repack boot.img || die "magiskboot repack boot.img failed"
+    mkdir -p "${IMAGES_DIR}"
+    cp new-boot.img "${IMAGES_DIR}/boot.img" || die "new-boot.img not found after repack"
+    # Clean up unpacked artefacts left by magiskboot (kernel, ramdisk.cpio, new-boot.img)
+    rm -f kernel ramdisk.cpio new-boot.img
+    cd "${KERNEL_ROOT}"
+    success "boot.img repacked and placed in ${IMAGES_DIR}/"
 
-# Patch header: replace board name value, preserving the key and all other fields
-[[ -f header ]] || die "vendor_boot header file not found after unpack"
-sed -i 's/^name=.*/name=SRPUE26A001/' header
+    # ─── Step 10: dtbo.img ───────────────────────────────────────────────────────
+    info "Copying dtbo.img..."
+    DTBO_SRC="${OUT_DIR}/arch/arm64/boot/dtbo.img"
+    [[ -f "$DTBO_SRC" ]] || die "dtbo.img not found at ${DTBO_SRC}"
+    cp "$DTBO_SRC" "${IMAGES_DIR}/dtbo.img"
+    success "dtbo.img placed in ${IMAGES_DIR}/"
 
-# Extract ramdisk
-mkdir -p ramdisk
-cd ramdisk || die "Failed to cd into ramdisk"
-cpio -idmu < ../ramdisk.cpio || die "cpio extract failed"
+    # ─── Step 11: vendor_boot.img ────────────────────────────────────────────────
+    info "Repacking vendor_boot.img..."
+    cd "${MAGISKBOOT_VENDOR_DIR}" || die "Missing ${MAGISKBOOT_VENDOR_DIR}"
+    rm -f dtb header ramdisk.cpio new-boot.img
+    rm -rf ramdisk
+    set +e
+    magiskboot unpack -h vendor_boot.img
+    ret=$?
+    set -e
 
-# ── Surgical module replacement ───────────────────────────────────────────────
-# Remove only what we own: stale .ko files, stale modules.* files, 5.4-gki contents
-# Leave everything else untouched: first_stage_ramdisk/, lib/firmware/
-rm -f lib/modules/*.ko
-rm -f lib/modules/modules.alias \
-      lib/modules/modules.dep \
-      lib/modules/modules.load \
-      lib/modules/modules.softdep
-# Wipe contents of any *-gki dirs including dotfiles, preserving the directories themselves
-if [ -d "lib/modules" ]; then
-    find lib/modules -maxdepth 1 -type d -name '*-gki' -print0 |
-        while IFS= read -r -d '' gki_dir; do
-            find "${gki_dir:?}" -mindepth 1 -delete
-        done
-fi
-# Copy fresh .ko files flat into lib/modules/
-mkdir -p lib/modules
-find "${MODULES_VERSIONED_DIR}" -name "*.ko" -exec cp -t lib/modules/ {} + \
-    || die "Failed to copy .ko files into ramdisk"
+    if [[ "$ret" -ne 0 && "$ret" -ne 3 ]]; then
+        die "magiskboot unpack vendor_boot.img failed (exit code $ret)"
+    fi
 
-# Copy generated modules.* files
-cp "${FLAT_VERSIONED_DIR}/modules.dep"     lib/modules/ || die "Failed to copy modules.dep"
-cp "${FLAT_VERSIONED_DIR}/modules.alias"   lib/modules/ || die "Failed to copy modules.alias"
-cp "${FLAT_VERSIONED_DIR}/modules.softdep" lib/modules/ || die "Failed to copy modules.softdep"
-cp "${FLAT_VERSIONED_DIR}/modules.load"    lib/modules/ || die "Failed to copy modules.load"
+    # Replace dtb with yupik.dtb
+    YUPIK_DTB="${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom/yupik.dtb"
+    [[ -f "$YUPIK_DTB" ]] || die "yupik.dtb not found at ${YUPIK_DTB}"
+    cp "$YUPIK_DTB" dtb
 
-# Copy firmware file (static, but must be present for any vendor_boot.img)
-FIRMWARE_SRC="${KERNEL_ROOT}/firmware/tsp_stm"
-[[ -d "$FIRMWARE_SRC" ]] || die "Firmware source not found at ${FIRMWARE_SRC}"
-mkdir -p lib/firmware/tsp_stm
-cp "${FIRMWARE_SRC}"/fts5cu56a_a52sxq* lib/firmware/tsp_stm/ \
-    || die "Failed to copy firmware files"
+    # Patch header: replace board name value, preserving the key and all other fields
+    [[ -f header ]] || die "vendor_boot header file not found after unpack"
+    sed -i 's/^name=.*/name=SRPUE26A001/' header
 
-# Fix permissions
-find . -type d -exec chmod 755 '{}' \;
-find . -type f -exec chmod 644 '{}' \;
+    # Extract ramdisk
+    mkdir -p ramdisk
+    cd ramdisk || die "Failed to cd into ramdisk"
+    cpio -idmu < ../ramdisk.cpio || die "cpio extract failed"
 
-# Repack ramdisk cpio
-find . -mindepth 1 -print0 \
-    | cpio --null -o -H newc --owner root:root > ../ramdisk.cpio \
-    || die "cpio repack failed"
+    # ── Surgical module replacement ───────────────────────────────────────────────
+    # Remove only what we own: stale .ko files, stale modules.* files, 5.4-gki contents
+    # Leave everything else untouched: first_stage_ramdisk/, lib/firmware/
+    rm -f lib/modules/*.ko
+    rm -f lib/modules/modules.alias \
+          lib/modules/modules.dep \
+          lib/modules/modules.load \
+          lib/modules/modules.softdep
+    # Wipe contents of any *-gki dirs including dotfiles, preserving the directories themselves
+    if [ -d "lib/modules" ]; then
+        find lib/modules -maxdepth 1 -type d -name '*-gki' -print0 |
+            while IFS= read -r -d '' gki_dir; do
+                find "${gki_dir:?}" -mindepth 1 -delete
+            done
+    fi
+    # Copy fresh .ko files flat into lib/modules/
+    mkdir -p lib/modules
+    find "${MODULES_VERSIONED_DIR}" -name "*.ko" -exec cp -t lib/modules/ {} + \
+        || die "Failed to copy .ko files into ramdisk"
 
-cd ..
-rm -rf ramdisk/
+    # Copy generated modules.* files
+    cp "${FLAT_VERSIONED_DIR}/modules.dep"     lib/modules/ || die "Failed to copy modules.dep"
+    cp "${FLAT_VERSIONED_DIR}/modules.alias"   lib/modules/ || die "Failed to copy modules.alias"
+    cp "${FLAT_VERSIONED_DIR}/modules.softdep" lib/modules/ || die "Failed to copy modules.softdep"
+    cp "${FLAT_VERSIONED_DIR}/modules.load"    lib/modules/ || die "Failed to copy modules.load"
 
-magiskboot repack vendor_boot.img || die "magiskboot repack vendor_boot.img failed"
-cp new-boot.img "${IMAGES_DIR}/vendor_boot.img" || die "new-boot.img not found after vendor_boot repack"
-# Clean up unpacked artefacts left by magiskboot (dtb, header, ramdisk.cpio, new-boot.img)
-rm -f dtb header ramdisk.cpio new-boot.img
-cd "${KERNEL_ROOT}"
-success "vendor_boot.img repacked and placed in ${IMAGES_DIR}/"
+    # Copy firmware file (static, but must be present for any vendor_boot.img)
+    FIRMWARE_SRC="${KERNEL_ROOT}/firmware/tsp_stm"
+    [[ -d "$FIRMWARE_SRC" ]] || die "Firmware source not found at ${FIRMWARE_SRC}"
+    mkdir -p lib/firmware/tsp_stm
+    cp "${FIRMWARE_SRC}"/fts5cu56a_a52sxq* lib/firmware/tsp_stm/ \
+        || die "Failed to copy firmware files"
 
-# ─── Step 12: Patch update-binary ────────────────────────────────────────────
-info "Patching update-binary (ROM, Root, Build date)..."
-[[ -f "$UPDATE_BINARY" ]] || die "update-binary not found at ${UPDATE_BINARY}"
+    # Fix permissions
+    find . -type d -exec chmod 755 '{}' \;
+    find . -type f -exec chmod 644 '{}' \;
 
-# Escape strings for sed
-ROM_ESC="$(printf '%s\n' "$ROM_TYPE" | sed 's/[\/&]/\\&/g')"
-ROOT_ESC="$(printf '%s\n' "$ROOT_DISPLAY" | sed 's/[\/&]/\\&/g')"
-DATE_ESC="$(printf '%s\n' "$BUILD_DATE" | sed 's/[\/&]/\\&/g')"
+    # Repack ramdisk cpio
+    find . -mindepth 1 -print0 \
+        | cpio --null -o -H newc --owner root:root > ../ramdisk.cpio \
+        || die "cpio repack failed"
 
-sed -i \
-    -e "s|^ui_print \"ROM:.*\";$|ui_print \"ROM:        ${ROM_ESC}\";|" \
-    -e "s|^ui_print \"Root:.*\";$|ui_print \"Root:       ${ROOT_ESC}\";|" \
-    -e "s|^ui_print \"Build date:.*\";$|ui_print \"Build date: ${DATE_ESC}\";|" \
-    "$UPDATE_BINARY" || die "sed patch of update-binary failed"
+    cd ..
+    rm -rf ramdisk/
 
-# Verify the patches actually landed
-grep -Fq "ROM:        ${ROM_TYPE}"     "$UPDATE_BINARY" || die "update-binary ROM patch did not apply"
-grep -Fq "Root:       ${ROOT_DISPLAY}" "$UPDATE_BINARY" || die "update-binary Root patch did not apply"
-grep -Fq "Build date: ${BUILD_DATE}"   "$UPDATE_BINARY" || die "update-binary Build date patch did not apply"
-success "update-binary patched and verified"
+    magiskboot repack vendor_boot.img || die "magiskboot repack vendor_boot.img failed"
+    cp new-boot.img "${IMAGES_DIR}/vendor_boot.img" || die "new-boot.img not found after vendor_boot repack"
+    # Clean up unpacked artefacts left by magiskboot (dtb, header, ramdisk.cpio, new-boot.img)
+    rm -f dtb header ramdisk.cpio new-boot.img
+    cd "${KERNEL_ROOT}"
+    success "vendor_boot.img repacked and placed in ${IMAGES_DIR}/"
 
-# ─── Step 13: Make flashable zip ─────────────────────────────────────────────
-info "Creating flashable zip: ${ZIP_NAME}..."
-[[ ! -f "${KERNEL_ROOT}/${ZIP_NAME}" ]] || warn "Overwriting existing zip: ${ZIP_NAME}"
-cd "${TEMPLATE_ZIP_DIR}" || die "Missing ${TEMPLATE_ZIP_DIR}"
-zip -X -r -9 "${KERNEL_ROOT}/${ZIP_NAME}" META-INF/ images/ \
-    || die "zip creation failed"
-cd "${KERNEL_ROOT}"
-success "Flashable zip created: ${KERNEL_ROOT}/${ZIP_NAME}"
+    # ─── Step 12: Patch update-binary ────────────────────────────────────────────
+    info "Patching update-binary (ROM, Root, Build date)..."
+    [[ -f "$UPDATE_BINARY" ]] || die "update-binary not found at ${UPDATE_BINARY}"
+
+    # Escape strings for sed
+    ROM_ESC="$(printf '%s\n' "$ROM_TYPE" | sed 's/[\/&]/\\&/g')"
+    ROOT_ESC="$(printf '%s\n' "$ROOT_DISPLAY" | sed 's/[\/&]/\\&/g')"
+    DATE_ESC="$(printf '%s\n' "$BUILD_DATE" | sed 's/[\/&]/\\&/g')"
+
+    sed -i \
+        -e "s|^ui_print \"ROM:.*\";$|ui_print \"ROM:        ${ROM_ESC}\";|" \
+        -e "s|^ui_print \"Root:.*\";$|ui_print \"Root:       ${ROOT_ESC}\";|" \
+        -e "s|^ui_print \"Build date:.*\";$|ui_print \"Build date: ${DATE_ESC}\";|" \
+        "$UPDATE_BINARY" || die "sed patch of update-binary failed"
+
+    # Verify the patches actually landed
+    grep -Fq "ROM:        ${ROM_TYPE}"     "$UPDATE_BINARY" || die "update-binary ROM patch did not apply"
+    grep -Fq "Root:       ${ROOT_DISPLAY}" "$UPDATE_BINARY" || die "update-binary Root patch did not apply"
+    grep -Fq "Build date: ${BUILD_DATE}"   "$UPDATE_BINARY" || die "update-binary Build date patch did not apply"
+    success "update-binary patched and verified"
+
+    # ─── Step 13: Make flashable zip ─────────────────────────────────────────────
+    info "Creating flashable zip: ${ZIP_NAME}..."
+    [[ ! -f "${RELEASE_DIR}/${ZIP_NAME}" ]] || warn "Overwriting existing zip: ${ZIP_NAME}"
+    cd "${TEMPLATE_ZIP_DIR}" || die "Missing ${TEMPLATE_ZIP_DIR}"
+    zip -X -r -9 "${RELEASE_DIR}/${ZIP_NAME}" META-INF/ images/ \
+        || die "zip creation failed"
+    cd "${KERNEL_ROOT}"
+    success "Flashable zip created: release/${ZIP_NAME}"
+
+    SUCCESSFUL_ZIPS+=("release/${ZIP_NAME}")
+done
 
 # ─── Done ────────────────────────────────────────────────────────────────────
 echo ""
@@ -485,10 +494,13 @@ echo -e "${GREEN}${BOLD}══════════════════�
 echo -e "${GREEN}${BOLD}  Build complete!${NC}"
 echo -e "  Author:     ${AUTHOR}"
 echo -e "  Device:     ${DEVICE}"
-echo -e "  ROM:        ${ROM_TYPE}"
 echo -e "  Root:       ${ROOT_DISPLAY}"
 echo -e "  Date:       ${BUILD_DATE}"
-echo -e "  Output:     ${ZIP_NAME}"
+echo -e "  Outputs:"
+for zip in "${SUCCESSFUL_ZIPS[@]}"; do
+    echo -e "    - ${zip}"
+done
+    echo -e "    - release/.config"
 echo -e "${GREEN}${BOLD}══════════════════════════════════════════════${NC}"
 
 exit 0
