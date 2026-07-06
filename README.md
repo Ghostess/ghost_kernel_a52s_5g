@@ -50,14 +50,7 @@ I am NOT a kernel developer. this is just my personal kernel that i made for mys
 ---
 
 # How to build
-Run `build_kernel_zip.sh` for a fully automated kernel build.
-You can run the script with an argument to specify if youre building for oneui or aosp:
-<br>
-`bash build_kernel_zip.sh oneui`
-<br>
-`bash build_kernel_zip.sh aosp`
-<br>
-You can also omit the argument and run `bash build_kernel_zip.sh` (it defaults to oneui)
+Run `build_kernel_zip.sh` for a fully automated kernel build (builds both oneui and aosp flashables and places them in the release/ folder along with the .config from the build)
 
 The script downloads and extracts required build tools (`clang` and `magiskboot`) into the local `toolchain/` directory. No system-wide installation is performed.
 
