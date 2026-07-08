@@ -58,8 +58,6 @@ You may edit hard-coded values in the script (such as AUTHOR or build metadata) 
 
 **Notes**:
 
-- The generated flashable .zip file is written to the kernel root directory with a filename based on build metadata (date, ROM type, device, and KernelSU version if applicable).
-
 - It's still not fully automated; if prompted during kernel configuration, use the options stated in the "Manually" section below.
 
 - The build script relies on pre-packaged images located in `base-images` for both AOSP (crDroid) and One UI (UN1CA 3.1.0) (For this one, i modified its fstab to support all oneui versions). If you provide your own `boot.img` or `vendor_boot.img`, make sure you replace both `boot.img` and `vendor_boot.img` in either `aosp` or `oneui` folder, depending on which ROM you got them from.
