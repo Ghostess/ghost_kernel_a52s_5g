@@ -1,5 +1,8 @@
 # Ghost's Custom Android Kernel for the Samsung A52s 5G (Snapdragon 778G - SM7325)
 
+Using [Eureka kernel](https://github.com/saadelasfur/android_kernel_samsung_sm7325/) as the source
+<br>
+
 Linux 5.4.254, built with Clang 19.0-r530567 (plus other compilation optimizations)
 
 ### Features
@@ -35,15 +38,15 @@ I am NOT a kernel developer. this is just my personal kernel that i made for mys
     - If the KernelSU-Next Manager app reports "Unsupported", completely uninstall and reinstall it. Your existing modules will be preserved
 
 > [!TIP]
-> Use [mountify](https://github.com/backslashxx/mountify) as the primary metamodule. If your KSU modules, such as GPU or audio driver modules, don't work, it's because you don't have a [metamodule](https://kernelsu.org/guide/metamodule.html) installed.
+> Use [mountify](https://github.com/backslashxx/mountify) or [hybrid-mount](https://github.com/Hybrid-Mount/meta-hybrid_mount) as the primary metamodule. If your KSU modules, such as GPU or audio driver modules, don't work, it's because you don't have a [metamodule](https://kernelsu.org/guide/metamodule.html) installed.
 >
 > Use this [KSU Module](https://github.com/user-attachments/files/25517721/A16StorageFix-v2.0.zip) if your apps can't save data in AOSP Android 16 ROMs. (There's also [this](https://github.com/omersusin/StorageFixer/) and [this](https://gist.github.com/Loukious/d7f6da0bdc13556d2cde84123fe4f794). Your pick)
 >
 > *The following are optional recommendations; feel free to use any, all, or none of them.*
 >
-> Update GPU drivers with this [KSU module](https://t.me/adrenolabsupport/242/1157). Newer versions of this module aren't compatible with this device. One notable issue is that you won't be able to upload stories on Instagram or send any media through DMs if you do update it. Stick with this one. You also need `mountify` for it to work
+> Update GPU drivers with this [KSU module](https://t.me/adrenolabsupport/242/1157). Newer versions of this module aren't compatible with this device. One notable issue is that you won't be able to upload stories on Instagram or send any media through DMs if you do update it. Stick with this one. You also need a metamodule (hybrid-mount, mountify) for it to work
 >
-> Use [Zygisk-Next](https://github.com/Dr-TSNG/ZygiskNext), and this version of [LSPosed](https://t.me/LSPosed/314) if needed (check for newer versions on that Telegram group)
+> Use [Zygisk-Next](https://github.com/Dr-TSNG/ZygiskNext), and this version of [LSPosed (Github)](https://github.com/JingMatrix/Vector) if needed. you can also use [LSPosed (Telegram)](https://t.me/LSPosed/314) but its closed source which i'd avoid (check for newer versions on that Telegram group)
 >
 > For ad-blocking, just use [bindhosts](https://github.com/bindhosts/bindhosts)
 
@@ -58,7 +61,7 @@ You may edit hard-coded values in the script (such as AUTHOR or build metadata) 
 
 **Notes**:
 
-- It's still not fully automated; if prompted during kernel configuration, use the options stated in the "Manually" section below.
+- If prompted during kernel configuration, you can simply press enter to go with the default options (which is what i use)
 
 - The build script relies on pre-packaged images located in `base-images` for both AOSP (crDroid) and One UI (UN1CA 3.1.0) (For this one, i modified its fstab to support all oneui versions). If you provide your own `boot.img` or `vendor_boot.img`, make sure you replace both `boot.img` and `vendor_boot.img` in either `aosp` or `oneui` folder, depending on which ROM you got them from.
 
