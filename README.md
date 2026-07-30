@@ -10,6 +10,7 @@ Linux 5.4.254, built with Clang 19.0-r530567 (plus other compilation optimizatio
 - Supports both AOSP* and One UI** roms
 - Optimized for battery life and performance
 - Disabled several kernel debugging tools, flags, and features
+- Backported [Multi-Gen LRU](https://docs.kernel.org/admin-guide/mm/multigen_lru.html) for better performance under memory pressure
 - Enabled CONFIG_TMPFS_XATTR for [mountify](https://github.com/backslashxx/mountify) KernelSU module mounting compatibility
 - Disabled Samsung Knox
 - Switchable SELinux policy
@@ -278,3 +279,5 @@ I also used bone-machine's README as the base for my own (his detailed build ins
 - https://git.codelinaro.org/clo/la/kernel/msm-5.4
 
 - https://github.com/WildKernels/kernel_patches/
+
+- https://github.com/ProtonKernel/Proton
