@@ -129,6 +129,11 @@ extern bool enable_pr_debug;
 #define LCD_INFO(V, X, ...) pr_debug("[%d.%d][SDE_%d] %s : "X, ktime_to_ms(ktime_get())/1000, ktime_to_ms(ktime_get())%1000, V ? V->ndx : 0, __func__, ## __VA_ARGS__)
 #define LCD_INFO_ONCE(V, X, ...) pr_info_once("[%d.%d][SDE_%d] %s : "X, ktime_to_ms(ktime_get())/1000, ktime_to_ms(ktime_get())%1000, V ? V->ndx : 0, __func__, ## __VA_ARGS__)
 #define LCD_ERR(V, X, ...) pr_err("[%d.%d][SDE_%d] %s : error: "X, ktime_to_ms(ktime_get())/1000, ktime_to_ms(ktime_get())%1000, V ? V->ndx : 0, __func__, ## __VA_ARGS__)
+#elif !IS_ENABLED(CONFIG_SAMSUNG_DEBUG_DSI)
+#define LCD_INFO_IF(V, X, ...) do { } while (0)
+#define LCD_INFO(V, X, ...) do { } while (0)
+#define LCD_INFO_ONCE(V, X, ...) pr_info_once("[SDE_%d] %s : "X, V ? V->ndx : 0, __func__, ## __VA_ARGS__)
+#define LCD_ERR(V, X, ...) pr_err("[SDE_%d] %s : error: "X, V ? V->ndx : 0, __func__, ## __VA_ARGS__)
 #else
 #define LCD_INFO_IF(V, X, ...) \
 	do { \
