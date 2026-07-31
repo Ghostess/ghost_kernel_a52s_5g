@@ -2,6 +2,10 @@ config SAMSUNG_DEBUG_DISPLAY
 	bool "Add Samsung Debugging code"
 	default n
 
+config SAMSUNG_DEBUG_DSI
+	bool "Add Samsung DSI Panel Debugging code"
+	default n
+
 config DISPLAY_SAMSUNG
 	bool "mdss config for samsung product"
 	default n
