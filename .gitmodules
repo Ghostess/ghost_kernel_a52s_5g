@@ -1,0 +1,4 @@
+[submodule "ReSukiSU"]
+	path = ReSukiSU
+	url = https://github.com/ReSukiSU/ReSukiSU
+	branch = main
