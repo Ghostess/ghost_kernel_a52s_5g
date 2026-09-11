@@ -6,7 +6,7 @@ Using [Eureka kernel](https://github.com/saadelasfur/android_kernel_samsung_sm73
 Linux 5.4.254, built with Clang 19.0-r530567 (plus other compilation optimizations)
 
 ### Features
-- KernelSU-Next as the root solution (manual hooks)
+- ReSukiSU as the root solution (manual hooks)
 - Supports both AOSP* and One UI** roms
 - Optimized for battery life and performance
 - Disabled several kernel debugging tools, flags, and features
@@ -35,8 +35,8 @@ I am NOT a kernel developer. this is just my personal kernel that i made for mys
 3. Flash the .zip file
     - If this is your first time flashing the kernel, make sure to wipe Cache/Dalvik. Otherwise, you can skip this step
 4. Reboot
-5. Download the KernelSU-Next manager app [here](https://github.com/KernelSU-Next/KernelSU-Next/releases) and install it
-    - If the KernelSU-Next Manager app reports "Unsupported", completely uninstall and reinstall it. Your existing modules will be preserved
+5. Download the ReSukiSU manager app [here](https://github.com/ReSukiSU/ReSukiSU/releases) and install it
+    - If the ReSukiSU Manager app reports "Unsupported", completely uninstall and reinstall it. Your existing modules will be preserved
 
 > [!TIP]
 > Use [mountify](https://github.com/backslashxx/mountify) or [hybrid-mount](https://github.com/Hybrid-Mount/meta-hybrid_mount) as the primary metamodule. If your KSU modules, such as GPU or audio driver modules, don't work, it's because you don't have a [metamodule](https://kernelsu.org/guide/metamodule.html) installed.
@@ -143,7 +143,7 @@ If prompted during configuration, use the following options:
 
 `Link-Time Optimization (LTO)` **2**
 
-`Use Clang's Control Flow Integrity (CFI) (CFI_CLANG)` **n** (or **yes** if not integrating KSU-Next root solution)
+`Use Clang's Control Flow Integrity (CFI) (CFI_CLANG)` **n** (or **yes** if not integrating ReSukiSU root solution)
 
 `Use CFI shadow to speed up cross-module checks (CFI_CLANG_SHADOW)` **y**
 
@@ -220,24 +220,25 @@ Go to `template-zip-file` folder and run the following command:
 Now flash the .zip file in your recovery environment
 
 ### Start-over
-`make ARCH=arm64 mrproper CONFIG_KSU_MANUAL_HOOK=y` (for whatever reason, KSU-Next needs that last flag enabled)
+`make ARCH=arm64 mrproper CONFIG_KSU_MANUAL_HOOK=y` (for whatever reason, ReSukiSU needs that last flag enabled)
 
 `rm -rf out/`
 
-## Update KSU-Next definitions
+## Update ReSukiSU definitions
 ```
-cd KernelSU-Next
+cd ReSukiSU
 git fetch --tags
-git checkout v3.2.0-legacy
+git checkout v4.2.0-rc1
 cd ..
-git add KernelSU-Next
-git commit -m "Update KernelSU-Next to v3.2.0-legacy"
+git add ReSukiSU
+git commit -m "Update ReSukiSU to v4.2.0-rc1"
 ```
 
 ---
 
 # Credits (*)
-**salvogiangri** (kernel, UN1CA ROM), **Simon1511** (AOSP related changes), **Frax3r/utkustnr** (kernel, update-binary shell script and README.md instructions), **RisenID** (kernel), **saadelasfur** (kernel),  **MySelly** (crDroid's Nothing-Phone-1 kernel, SUSFS implementation), **Haky86** (kernel A23 5G), **DrRoot85** (kernel S23), **0xSecureByte** (kernel msm-5.4), **rifsxd** (KSU-Next), **backslashxx** (Manual hook implementation for KSU-Next), **osm0sis** (Recovery Flashable Zip shell script), **ravindu644** (kernel compilation), **Samsung** (original kernel source code), **CodeLinaro** (kernel Qualcomm msm-5.4)
+**salvogiangri** (kernel, UN1CA ROM), **Simon1511** (AOSP related changes), **Frax3r/utkustnr** (kernel, update-binary shell script and README.md instructions), **RisenID** (kernel), **saadelasfur** (kernel),  **MySelly** (crDroid's Nothing-Phone-1 kernel, SUSFS implementation), **Haky86** (kernel A23 5G), **DrRoot85** (kernel S23), **0xSecureByte** (kernel msm-5.4),
+ReSukiSU (group project?), **rifsxd** (KSU-Next), **backslashxx** (Manual hook implementation for KSU-Next), **osm0sis** (Recovery Flashable Zip shell script), **ravindu644** (kernel compilation), **Samsung** (original kernel source code), **CodeLinaro** (kernel Qualcomm msm-5.4)
 
 Special thanks to bone-machine (https://github.com/bone-machine/android_kernel_samsung_sm7325_a52s_5g). I forked saadelasfur's repo as the base for this kernel, but cherry picked a lot of commits from bone-machine's repo and use his build script too (it would take me a long time to make one on my own)
 
@@ -269,6 +270,8 @@ I also used bone-machine's README as the base for my own (his detailed build ins
 - https://github.com/0xSecureByte/platform_kernel_msm-5.4
 
 - https://github.com/KernelSU-Next/KernelSU-Next
+
+- https://github.com/ReSukiSU/ReSukiSU
 
 - https://github.com/backslashxx/KernelSU/issues/5#event-24583207399
 
