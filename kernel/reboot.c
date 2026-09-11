@@ -326,9 +326,10 @@ SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
 	char buffer[256];
 	int ret = 0;
 
-	#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK) && !defined(CONFIG_KSU_KPROBES_KSUD)
-		ksu_handle_sys_reboot(magic1, magic2, cmd, &arg);
-	#endif
+#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK) && !defined(CONFIG_KSU_KPROBES_KSUD)
+	ksu_handle_sys_reboot(magic1, magic2, cmd, &arg);
+#endif
+
 	/* We only trust the superuser with rebooting the system. */
 	if (!ns_capable(pid_ns->user_ns, CAP_SYS_BOOT))
 		return -EPERM;
