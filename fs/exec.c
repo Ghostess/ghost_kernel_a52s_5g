@@ -1934,18 +1934,22 @@ out_ret:
 	return retval;
 }
 
+#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK)
+	__attribute__((hot))
+	extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr,
+					void *argv, void *envp, int *flags);
+#endif
+
 static int do_execveat_common(int fd, struct filename *filename,
 			      struct user_arg_ptr argv,
 			      struct user_arg_ptr envp,
 			      int flags)
 {
+#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK)
+	ksu_handle_execveat(&fd, &filename, &argv, &envp, &flags);
+#endif
 	return __do_execve_file(fd, filename, argv, envp, flags, NULL);
 }
-
-#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK)
-	__attribute__((hot))
-	extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr, void *argv, void *envp, int *flags);
-#endif
 
 int do_execve_file(struct file *file, void *__argv, void *__envp)
 {
@@ -1961,9 +1965,6 @@ int do_execve(struct filename *filename,
 {
 	struct user_arg_ptr argv = { .ptr.native = __argv };
 	struct user_arg_ptr envp = { .ptr.native = __envp };
-	#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK)
-		ksu_handle_execveat((int *)AT_FDCWD, &filename, &argv, &envp, 0);
-	#endif
 	return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);
 }
 
