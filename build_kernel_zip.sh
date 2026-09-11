@@ -56,7 +56,7 @@ UPDATE_BINARY="${TEMPLATE_ZIP_DIR}/META-INF/com/google/android/update-binary"
 
 # ─── Sanity checks ────────────────────────────────────────────────────────────
 
-for cmd in curl unzip zip cpio find sed git uname tar grep nproc cp chmod depmod; do
+for cmd in bison bc curl unzip zip cpio find sed git uname tar grep nproc cp chmod depmod kmod flex; do
     command -v "$cmd" &>/dev/null || die "Required command not found: $cmd"
 done
 
@@ -117,22 +117,22 @@ git -C "${KERNEL_ROOT}" rev-parse --git-dir >/dev/null 2>&1 \
 
 info "Updating git submodules..."
 git -C "${KERNEL_ROOT}" submodule update --init --recursive
-info "Fetching KernelSU tags..."
-git -C "${KERNEL_ROOT}/KernelSU-Next" fetch origin --tags
+info "Fetching ReSukiSU tags..."
+git -C "${KERNEL_ROOT}/ReSukiSU" fetch origin --tags
 success "Submodules up to date"
 
-KSU_VERSION="$(git -C "$KERNEL_ROOT/KernelSU-Next" describe --tags --abbrev=0 2>/dev/null || echo unknown)"
+KSU_VERSION="$(git -C "$KERNEL_ROOT/ReSukiSU" describe --tags --abbrev=0 2>/dev/null || echo unknown)"
 
-# KernelSU-Next submodule (only on KSU branches)
+# ReSukiSU submodule (only on KSU branches)
 if [[ "$KSU_VERSION" != "none" ]]; then
-    check_dir "${KERNEL_ROOT}/KernelSU-Next"            "KernelSU-Next submodule"
+    check_dir "${KERNEL_ROOT}/ReSukiSU"            "ReSukiSU submodule"
 fi
 
 # Display string for root solution
 if [[ "$KSU_VERSION" == "none" ]]; then
     ROOT_DISPLAY="none"
 else
-    ROOT_DISPLAY="KernelSU-Next ${KSU_VERSION}"
+    ROOT_DISPLAY="ReSukiSU ${KSU_VERSION}"
 fi
 
 # ─── Step 2: Clang toolchain ──────────────────────────────────────────────────
@@ -348,7 +348,7 @@ for ROM_TYPE in "One-UI" "AOSP"; do
     if [[ "$KSU_VERSION" == "none" ]]; then
         ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${DEVICE}_${SHA}.zip"
     else
-        ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_KSU-Next-${KSU_VERSION}_${DEVICE}_${SHA}.zip"
+        ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_ReSukiSU-${KSU_VERSION}_${DEVICE}_${SHA}.zip"
     fi
 
     # ─── Step 9: boot.img ────────────────────────────────────────────────────────
