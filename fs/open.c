@@ -356,34 +356,14 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
  * We do this by temporarily clearing all FS-related capabilities and
  * switching the fsuid/fsgid around to the real ones.
  */
-long do_faccessat(int dfd, const char __user *filename, int mode, int flags)
+static const struct cred *access_override_creds(void)
 {
-	const struct cred *old_cred = NULL;
-	struct cred *override_cred = NULL;
-	struct path path;
-	struct inode *inode;
-	int res;
-	unsigned int lookup_flags = LOOKUP_FOLLOW;
+	const struct cred *old_cred;
+	struct cred *override_cred;
 
-#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK)
-	ksu_handle_faccessat(&dfd, &filename, &mode, &flags);
-#endif
-
-	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
-		return -EINVAL;
-
-	if (flags & ~(AT_EACCESS | AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH))
-		return -EINVAL;
-
-	if (flags & AT_SYMLINK_NOFOLLOW)
-		lookup_flags &= ~LOOKUP_FOLLOW;
-	if (flags & AT_EMPTY_PATH)
-		lookup_flags |= LOOKUP_EMPTY;
-
-	if (!(flags & AT_EACCESS)) {
-		override_cred = prepare_creds();
+	override_cred = prepare_creds();
 	if (!override_cred)
-			return -ENOMEM;
+		return NULL;
 
 	override_cred->fsuid = override_cred->uid;
 	override_cred->fsgid = override_cred->gid;
@@ -397,7 +377,7 @@ long do_faccessat(int dfd, const char __user *filename, int mode, int flags)
 			override_cred->cap_effective =
 				override_cred->cap_permitted;
 	}
-		
+
 	/*
 	 * The new set of credentials can *only* be used in
 	 * task-synchronous circumstances, and does not need
@@ -416,9 +396,44 @@ long do_faccessat(int dfd, const char __user *filename, int mode, int flags)
 	 * cred accesses will keep things non-RCY.
 	 */
 	override_cred->non_rcu = 1;
-	
+
 	old_cred = override_creds(override_cred);
+
+	/* override_cred() gets its own ref */
+	put_cred(override_cred);
+
+	return old_cred;
+}
+
+long do_faccessat(int dfd, const char __user *filename, int mode, int flags)
+{
+	struct path path;
+	struct inode *inode;
+	int res;
+	unsigned int lookup_flags = LOOKUP_FOLLOW;
+	const struct cred *old_cred = NULL;
+
+#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK)
+	ksu_handle_faccessat(&dfd, &filename, &mode, &flags);
+#endif
+
+	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
+		return -EINVAL;
+
+	if (flags & ~(AT_EACCESS | AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH))
+		return -EINVAL;
+
+	if (flags & AT_SYMLINK_NOFOLLOW)
+		lookup_flags &= ~LOOKUP_FOLLOW;
+	if (flags & AT_EMPTY_PATH)
+		lookup_flags |= LOOKUP_EMPTY;
+
+	if (!(flags & AT_EACCESS)) {
+		old_cred = access_override_creds();
+		if (!old_cred)
+			return -ENOMEM;
 	}
+
 retry:
 	res = user_path_at(dfd, filename, lookup_flags, &path);
 	if (res)
@@ -460,10 +475,9 @@ out_path_release:
 		goto retry;
 	}
 out:
-	if (old_cred) {
+	if (old_cred)
 		revert_creds(old_cred);
-		put_cred(override_cred);
-	}
+
 	return res;
 }
 
