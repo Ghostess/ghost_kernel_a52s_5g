@@ -208,7 +208,7 @@ success "Clean done and release folder prepared"
 
 # ─── Step 6: Defconfig ───────────────────────────────────────────────────────
 info "Generating defconfig..."
-make -C "${KERNEL_ROOT}" O="${OUT_DIR}" LLVM=1 LLVM_IAS=1 ARCH=arm64 vendor/a52sxq_kor_single_defconfig \
+make -C "${KERNEL_ROOT}" O="${OUT_DIR}" CC=clang CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 ARCH=arm64 vendor/a52sxq_kor_single_defconfig \
     || die "defconfig failed"
 success "Defconfig generated"
 
