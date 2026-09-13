@@ -32,6 +32,7 @@
 #include <linux/ima.h>
 #include <linux/dnotify.h>
 #include <linux/compat.h>
+#include <linux/fcntl.h>
 
 #include "internal.h"
 
@@ -344,26 +345,45 @@ SYSCALL_DEFINE4(fallocate, int, fd, int, mode, loff_t, offset, loff_t, len)
 	return ksys_fallocate(fd, mode, offset, len);
 }
 
+#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK)
+	__attribute__((hot)) 
+	extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user,
+					int *mode, int *flags);
+#endif
+
 /*
  * access() needs to use the real uid/gid, not the effective uid/gid.
  * We do this by temporarily clearing all FS-related capabilities and
  * switching the fsuid/fsgid around to the real ones.
  */
-long do_faccessat(int dfd, const char __user *filename, int mode)
+long do_faccessat(int dfd, const char __user *filename, int mode, int flags)
 {
-	const struct cred *old_cred;
-	struct cred *override_cred;
+	const struct cred *old_cred = NULL;
+	struct cred *override_cred = NULL;
 	struct path path;
 	struct inode *inode;
 	int res;
 	unsigned int lookup_flags = LOOKUP_FOLLOW;
 
+#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK)
+	ksu_handle_faccessat(&dfd, &filename, &mode, &flags);
+#endif
+
 	if (mode & ~S_IRWXO)	/* where's F_OK, X_OK, W_OK, R_OK? */
 		return -EINVAL;
 
-	override_cred = prepare_creds();
+	if (flags & ~(AT_EACCESS | AT_SYMLINK_NOFOLLOW | AT_EMPTY_PATH))
+		return -EINVAL;
+
+	if (flags & AT_SYMLINK_NOFOLLOW)
+		lookup_flags &= ~LOOKUP_FOLLOW;
+	if (flags & AT_EMPTY_PATH)
+		lookup_flags |= LOOKUP_EMPTY;
+
+	if (!(flags & AT_EACCESS)) {
+		override_cred = prepare_creds();
 	if (!override_cred)
-		return -ENOMEM;
+			return -ENOMEM;
 
 	override_cred->fsuid = override_cred->uid;
 	override_cred->fsgid = override_cred->gid;
@@ -377,7 +397,7 @@ long do_faccessat(int dfd, const char __user *filename, int mode)
 			override_cred->cap_effective =
 				override_cred->cap_permitted;
 	}
-
+		
 	/*
 	 * The new set of credentials can *only* be used in
 	 * task-synchronous circumstances, and does not need
@@ -396,8 +416,9 @@ long do_faccessat(int dfd, const char __user *filename, int mode)
 	 * cred accesses will keep things non-RCY.
 	 */
 	override_cred->non_rcu = 1;
-
+	
 	old_cred = override_creds(override_cred);
+	}
 retry:
 	res = user_path_at(dfd, filename, lookup_flags, &path);
 	if (res)
@@ -439,28 +460,26 @@ out_path_release:
 		goto retry;
 	}
 out:
-	revert_creds(old_cred);
-	put_cred(override_cred);
+	if (old_cred) {
+		revert_creds(old_cred);
+		put_cred(override_cred);
+	}
 	return res;
 }
 
-#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK)
-	__attribute__((hot)) 
-	extern int ksu_handle_faccessat(int *dfd, const char __user **filename_user,
-					int *mode, int *flags);
-#endif
+SYSCALL_DEFINE4(faccessat2, int, dfd, const char __user *, filename, int, mode, int, flags)
+{
+	return do_faccessat(dfd, filename, mode, flags);
+}
 
 SYSCALL_DEFINE3(faccessat, int, dfd, const char __user *, filename, int, mode)
 {
-	#if defined(CONFIG_KSU) && defined(CONFIG_KSU_MANUAL_HOOK)
-		ksu_handle_faccessat(&dfd, &filename, &mode, NULL);
-	#endif
-	return do_faccessat(dfd, filename, mode);
+	return do_faccessat(dfd, filename, mode, 0);
 }
 
 SYSCALL_DEFINE2(access, const char __user *, filename, int, mode)
 {
-	return do_faccessat(AT_FDCWD, filename, mode);
+	return do_faccessat(AT_FDCWD, filename, mode, 0);
 }
 
 int ksys_chdir(const char __user *filename)
