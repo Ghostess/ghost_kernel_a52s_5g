@@ -44,6 +44,8 @@ MAGISK_APK_URL="https://github.com/topjohnwu/Magisk/releases/download/v30.7/Magi
 
 # Script lives in the kernel root — resolve its real location regardless of cwd
 KERNEL_ROOT="$(cd "$(dirname "$0")" && pwd)"
+KSU_NAME="ReSukiSU"
+KSU_DIR="${KERNEL_ROOT}/ReSukiSU"
 TOOLCHAIN_DIR="${KERNEL_ROOT}/toolchain"
 CLANG_DIR="${TOOLCHAIN_DIR}/clang"
 MAGISKBOOT_BIN="${TOOLCHAIN_DIR}/magiskboot/magiskboot"
@@ -109,6 +111,9 @@ check_glob "${KERNEL_ROOT}/firmware/tsp_stm/fts5cu56a_a52sxq*" "TSP firmware fil
 # Kernel defconfig
 check_file "${KERNEL_ROOT}/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig" "Kernel defconfig"
 
+# ksu submodule
+check_dir "${KSU_DIR}"                 "${KSU_NAME} submodule"
+
 (( PREFLIGHT_FAILED == 0 )) || die "Pre-flight checks failed — fix the above before building"
 success "Pre-flight checks passed"
 
@@ -117,23 +122,18 @@ git -C "${KERNEL_ROOT}" rev-parse --git-dir >/dev/null 2>&1 \
 
 info "Updating git submodules..."
 git -C "${KERNEL_ROOT}" submodule update --init --recursive
-info "Fetching ReSukiSU tags..."
-git -C "${KERNEL_ROOT}/ReSukiSU" fetch origin --tags
+info "Fetching ${KSU_NAME} tags..."
+git -C "${KSU_DIR}" fetch origin --tags
 success "Submodules up to date"
 
-KSU_VERSION="$(git -C "$KERNEL_ROOT/ReSukiSU" describe --tags --abbrev=0 2>/dev/null || echo unknown)"
+KSU_VERSION="$(git -C "$KSU_DIR" describe --tags --abbrev=0)"
+KSU_HASH=$(git -C "$KSU_DIR" rev-parse --short HEAD)
+KSU_HASH_FULL=$(git -C "$KSU_DIR" rev-parse HEAD)
+ROOT_DISPLAY="${KSU_NAME} ${KSU_VERSION}-(${KSU_HASH})"
 
-# ReSukiSU submodule (only on KSU branches)
-if [[ "$KSU_VERSION" != "none" ]]; then
-    check_dir "${KERNEL_ROOT}/ReSukiSU"            "ReSukiSU submodule"
-fi
-
-# Display string for root solution
-if [[ "$KSU_VERSION" == "none" ]]; then
-    ROOT_DISPLAY="none"
-else
-    ROOT_DISPLAY="ReSukiSU ${KSU_VERSION}"
-fi
+# Print ksu version and hash
+info "Using ${ROOT_DISPLAY}"
+info "Full Hash: ${KSU_HASH_FULL}"
 
 # ─── Step 2: Clang toolchain ──────────────────────────────────────────────────
 if [[ -x "${CLANG_DIR}/bin/clang" ]] && "${CLANG_DIR}/bin/clang" --version >/dev/null 2>&1; then
@@ -348,7 +348,7 @@ for ROM_TYPE in "One-UI" "AOSP"; do
     if [[ "$KSU_VERSION" == "none" ]]; then
         ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${DEVICE}_${SHA}.zip"
     else
-        ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_ReSukiSU-${KSU_VERSION}_${DEVICE}_${SHA}.zip"
+        ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${KSU_NAME}-${KSU_VERSION}_${DEVICE}_${SHA}.zip"
     fi
 
     # ─── Step 9: boot.img ────────────────────────────────────────────────────────
