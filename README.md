@@ -28,7 +28,7 @@ I am NOT a kernel developer. this is just my personal kernel that i made for mys
 ---
 
 # Installation
-1. Download the appropriate flashable .zip file from the [Releases](https://github.com/Ghostess/android_kernel_samsung_sm7325/releases/) (Or [Github Actions](https://github.com/Ghostess/android_kernel_samsung_sm7325/actions) for nightly builds)
+1. Download the appropriate flashable .zip file from the [Releases](https://github.com/Ghostess/ghost_kernel_a52s_5g/releases) (Or [Github Actions](https://github.com/Ghostess/ghost_kernel_a52s_5g/actions) for nightly builds)
    - `*_AOSP_*.zip` for AOSP-based ROMs
    - `*_One-UI_*.zip` for Samsung One UI ROMs
 2. Reboot into your recovery environment (see [TWRP](https://xdaforums.com/t/recovery-official-twrp-3-7-1-0-for-galaxy-a52s-5g.4488419/))
@@ -107,7 +107,7 @@ Most of the next steps are outdated, but it will still build successfully.
 
 ### Clone this repository
 
-`git clone git@github.com:Ghostess/android_kernel_samsung_sm7325.git`
+`git clone git@github.com:Ghostess/ghost_kernel_a52s_5g.git`
 
 ### Update git submodules
 
