@@ -95,12 +95,6 @@ check_glob() {
     fi
 }
 
-# Check boot images for BOTH targets to fail early if missing
-check_file "${BASE_IMAGES_DIR}/oneui/boot/boot.img"               "One-UI boot image"
-check_file "${BASE_IMAGES_DIR}/oneui/vendor_boot/vendor_boot.img" "One-UI vendor_boot image"
-check_file "${BASE_IMAGES_DIR}/aosp/boot/boot.img"                "AOSP boot image"
-check_file "${BASE_IMAGES_DIR}/aosp/vendor_boot/vendor_boot.img"  "AOSP vendor_boot image"
-
 # Flashable zip template
 check_file "${FSTAB_PATCH}"                              "fstab patch for unified oneui zips"
 check_file "${UPDATE_BINARY}"                            "update-binary"
@@ -117,9 +111,6 @@ check_file "${KERNEL_ROOT}/arch/arm64/configs/vendor/a52sxq_kor_single_defconfig
 # ksu submodule
 check_dir "${KSU_DIR}"                 "${KSU_NAME} submodule"
 
-(( PREFLIGHT_FAILED == 0 )) || die "Pre-flight checks failed — fix the above before building"
-success "Pre-flight checks passed"
-
 git -C "${KERNEL_ROOT}" rev-parse --git-dir >/dev/null 2>&1 \
     || die "Kernel root is not a git repository"
 
@@ -128,6 +119,14 @@ git -C "${KERNEL_ROOT}" submodule update --init --recursive
 info "Fetching ${KSU_NAME} tags..."
 git -C "${KSU_DIR}" fetch origin --tags
 success "Submodules up to date"
+
+check_file "${BASE_IMAGES_DIR}/oneui/boot/boot.img"               "One-UI boot image"
+check_file "${BASE_IMAGES_DIR}/oneui/vendor_boot/vendor_boot.img" "One-UI vendor_boot image"
+check_file "${BASE_IMAGES_DIR}/aosp/boot/boot.img"                "AOSP boot image"
+check_file "${BASE_IMAGES_DIR}/aosp/vendor_boot/vendor_boot.img"  "AOSP vendor_boot image"
+
+(( PREFLIGHT_FAILED == 0 )) || die "Pre-flight checks failed — fix the above before building"
+success "Pre-flight checks passed"
 
 KSU_VERSION="$(git -C "$KSU_DIR" describe --tags --abbrev=0)"
 KSU_HASH=$(git -C "$KSU_DIR" rev-parse --short HEAD)
