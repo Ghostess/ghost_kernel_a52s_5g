@@ -2,3 +2,6 @@
 	path = ReSukiSU
 	url = https://github.com/ReSukiSU/ReSukiSU
 	branch = main
+[submodule "base-images"]
+	path = base-images
+	url = https://github.com/Ghostess/ghost_kernel_assets
