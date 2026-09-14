@@ -76,7 +76,7 @@ runs:
           case "${HOOK_TYPE:-kprobes}" in
             kprobes) scripts/config --file "$OUT_DIR/.config" --enable CONFIG_KSU_KPROBES_HOOK ;;
             scope-min-1.6|rksu|syscall) scripts/config --file "$OUT_DIR/.config" --enable CONFIG_KSU_MANUAL_HOOK ;;
-            inline) scripts/config --file "$OUT_DIR/.config" --enable CONFIG_KSU_MANUAL_HOOK ;;
+            inline) scripts/config --file "$OUT_DIR/.config" --enable CONFIG_KSU_SUSFS ;;
             *) echo "::error::Unsupported hook type: ${HOOK_TYPE}"; exit 1 ;;
           esac
         fi
