@@ -51,6 +51,8 @@ CLANG_DIR="${TOOLCHAIN_DIR}/clang"
 MAGISKBOOT_BIN="${TOOLCHAIN_DIR}/magiskboot/magiskboot"
 OUT_DIR="${KERNEL_ROOT}/out"
 RELEASE_DIR="${KERNEL_ROOT}/release"
+CUSTOM_PATCHES="${KERNEL_ROOT}/custom-patches"
+FSTAB_PATCH="${CUSTOM_PATCHES}/unica_fstab.patch"
 BASE_IMAGES_DIR="${KERNEL_ROOT}/base-images"
 TEMPLATE_ZIP_DIR="${KERNEL_ROOT}/template-zip-file"
 IMAGES_DIR="${TEMPLATE_ZIP_DIR}/images"
@@ -100,6 +102,7 @@ check_file "${BASE_IMAGES_DIR}/aosp/boot/boot.img"                "AOSP boot ima
 check_file "${BASE_IMAGES_DIR}/aosp/vendor_boot/vendor_boot.img"  "AOSP vendor_boot image"
 
 # Flashable zip template
+check_file "${FSTAB_PATCH}"                              "fstab patch for unified oneui zips"
 check_file "${UPDATE_BINARY}"                            "update-binary"
 check_dir  "${IMAGES_DIR}"                               "Flashable zip images dir"
 check_dir  "${TEMPLATE_ZIP_DIR}/META-INF"                "Flashable zip META-INF dir"
@@ -435,6 +438,15 @@ for ROM_TYPE in "One-UI" "AOSP"; do
     mkdir -p lib/firmware/tsp_stm
     cp "${FIRMWARE_SRC}"/fts5cu56a_a52sxq* lib/firmware/tsp_stm/ \
         || die "Failed to copy firmware files"
+
+    if [[ "$ROM_TYPE" == "One-UI" ]]; then
+        echo "Applying fstab patch..."
+        if patch --fuzz=0 first_stage_ramdisk/fstab.qcom "$FSTAB_PATCH"; then
+            echo "fstab patch: success."
+        else
+            die "fstab patch: match error, file structure changed and patch needs an update."
+        fi
+    fi
 
     # Fix permissions
     find . -type d -exec chmod 755 '{}' \;
