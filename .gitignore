@@ -153,3 +153,9 @@ arch/*/configs/vendor/*_defconfig
 
 # vendor device tree directories
 arch/arm/boot/dts/vendor
+
+# downloaded toolchains
+toolchain/
+
+# generated flashable zips
+release/
