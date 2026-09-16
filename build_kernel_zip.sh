@@ -5,6 +5,7 @@
 # ===================================================================================
 
 set -euo pipefail
+BUILD_ARGS=("$@")
 
 # ─── Colour helpers ───────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -14,6 +15,22 @@ info()    { echo -e "${CYAN}${BOLD}[INFO]${NC}  $*"; }
 success() { echo -e "${GREEN}${BOLD}[OK]${NC}    $*"; }
 warn()    { echo -e "${YELLOW}${BOLD}[WARN]${NC}  $*"; }
 die()     { echo -e "${RED}${BOLD}[ERR]${NC}   $*" >&2; exit 1; }
+
+# build vars
+CLEAN_BUILD=false
+
+for arg in "${BUILD_ARGS[@]}"
+do
+    case "$arg" in
+        "clean")
+            info "'clean' argument passed to the build script."
+            CLEAN_BUILD=true
+            ;;
+        *)
+            die "'$arg' isnt a valid argument!"
+            ;;
+    esac
+done
 
 # ─── Trap: clean up any mktemp dirs on unexpected exit ────────────────────────
 TMP_CLANG=""
@@ -202,11 +219,16 @@ export PATH="${CLANG_DIR}/bin:$(dirname "$MAGISKBOOT_BIN"):$PATH"
 info "PATH updated: Clang and magiskboot directories prepended"
 
 # ─── Step 5: Clean previous build ────────────────────────────────────────────
-info "Wiping out/ and release/ from previous build..."
-rm -rf "${OUT_DIR}"
-rm -rf "${RELEASE_DIR}"
+if [[ "$CLEAN_BUILD" == "true" ]]; then
+    info "Wiping out/ and release/ from previous build..."
+    rm -rf "${OUT_DIR}"
+    rm -rf "${RELEASE_DIR}"
+    success "Wiped out/ and release/ successfully!"
+fi
+
+# Ensure this folder always exists regardless of whether we cleaned or not
 mkdir -p "${RELEASE_DIR}"
-success "Clean done and release folder prepared"
+info "Release folder prepared"
 
 # ─── Step 6: Defconfig ───────────────────────────────────────────────────────
 info "Generating defconfig..."
