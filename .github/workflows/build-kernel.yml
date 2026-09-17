@@ -39,7 +39,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y flex kmod cpio libelf-dev gcc-aarch64-linux-gnu
+          sudo apt-get install -y flex kmod cpio libelf-dev
 
       - name: Compile Kernel
         run: |
