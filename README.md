@@ -1,9 +1,9 @@
 # Ghost's Custom Android Kernel for the Samsung A52s 5G (Snapdragon 778G - SM7325)
 
-Using [Eureka kernel](https://github.com/saadelasfur/android_kernel_samsung_sm7325/) as the source
+Using [Nova kernel](https://github.com/OmarAlsmehan/Nova-Kernel) as the source
 <br>
 
-Linux 5.4.254, built with Clang 19.0-r530567 (plus other compilation optimizations)
+Linux 5.4.302, built with Clang 22.0.2-r596125 (plus other compilation optimizations)
 
 ### Features
 - ReSukiSU as the root solution (manual hooks)
@@ -256,6 +256,8 @@ I also used bone-machine's README as the base for my own (his detailed build ins
 - https://github.com/utkustnr/android_kernel_samsung_sm7325/
 
 - https://github.com/RisenID/kernel_samsung_ascendia_sm7325
+
+- https://github.com/OmarAlsmehan/Nova-Kernel/
 
 - https://github.com/saadelasfur/android_kernel_samsung_sm7325/
 
