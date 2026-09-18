@@ -56,7 +56,7 @@ KBUILD_BUILD_USER="ghost"
 KBUILD_BUILD_HOST="release"
 
 
-CLANG_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r530567.tar.gz"
+CLANG_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/mirror-goog-main-llvm-toolchain-source/clang-r596125.tar.gz"
 MAGISK_APK_URL="https://github.com/topjohnwu/Magisk/releases/download/v30.7/Magisk-v30.7.apk"
 
 # Script lives in the kernel root — resolve its real location regardless of cwd
