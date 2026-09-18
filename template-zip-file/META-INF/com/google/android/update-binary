@@ -1,7 +1,7 @@
 #!/sbin/sh
 # Shell Script EDIFY Replacement: Recovery Flashable Zip
-# Credits to: osm0sis, salvogiangri, Simon1511, RisenID, Frax3r, saadelasfur
-# See https://github.com/bone-machine/android_kernel_samsung_sm7325_a52s_5g
+# Credits to: osm0sis, salvogiangri, Simon1511, RisenID, Frax3r, saadelasfur, OmarAlsmehan
+# See https://github.com/Ghostess/ghost_kernel_a52s_5g/
 
 OUTFD=/proc/self/fd/$2;
 ZIPFILE="$3";
@@ -94,7 +94,7 @@ ui_print "Device:     Samsung Galaxy A52s 5G";
 ui_print "Codename:   a52sxq";
 ui_print "Root:       kernelsu";
 ui_print "ROM:        One-UI";
-ui_print "Kernel:     Linux 5.4.254";
+ui_print "Kernel:     Linux 5.4.302";
 ui_print "Compiler:   Clang 19";
 ui_print "Build date: 2026-06-13";
 ui_print " ";
