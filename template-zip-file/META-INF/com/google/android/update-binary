@@ -95,7 +95,7 @@ ui_print "Codename:   a52sxq";
 ui_print "Root:       kernelsu";
 ui_print "ROM:        One-UI";
 ui_print "Kernel:     Linux 5.4.302";
-ui_print "Compiler:   Clang 19";
+ui_print "Compiler:   Clang 22";
 ui_print "Build date: 2026-06-13";
 ui_print " ";
 ui_print "Special thanks to salvogiangri, Simon1511,";
