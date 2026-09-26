@@ -6,6 +6,8 @@
 
 set -euo pipefail
 BUILD_ARGS=("$@")
+THREAD_COUNT="$(nproc)"
+HOST_ARCH="$(uname -i)"
 
 # ─── Colour helpers ───────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -55,8 +57,19 @@ DEVICE="a52sxq"
 KBUILD_BUILD_USER="ghost"
 KBUILD_BUILD_HOST="release"
 
+case "$HOST_ARCH" in
+    x86_64*)
+        CLANG_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/mirror-goog-main-llvm-toolchain-source/clang-r596125.tar.gz"
+        ;;
+    aarch64|arm64)
+        CLANG_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-arm64/+archive/refs/heads/mirror-goog-main-llvm-toolchain-source/clang-r596125.tar.gz"
+        ;;
+    *)
+        echo "Unsupported architecture: $HOST_ARCH" >&2
+        exit 1
+        ;;
+esac
 
-CLANG_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/mirror-goog-main-llvm-toolchain-source/clang-r596125.tar.gz"
 MAGISK_APK_URL="https://github.com/topjohnwu/Magisk/releases/download/v30.7/Magisk-v30.7.apk"
 
 # Script lives in the kernel root — resolve its real location regardless of cwd
@@ -77,7 +90,7 @@ UPDATE_BINARY="${TEMPLATE_ZIP_DIR}/META-INF/com/google/android/update-binary"
 
 # ─── Sanity checks ────────────────────────────────────────────────────────────
 
-for cmd in bison bc curl unzip zip cpio find sed git uname tar grep nproc cp chmod depmod kmod flex; do
+for cmd in patch bison bc curl unzip zip cpio find sed git uname tar grep nproc cp chmod depmod kmod flex; do
     command -v "$cmd" &>/dev/null || die "Required command not found: $cmd"
 done
 
@@ -237,8 +250,8 @@ make -C "${KERNEL_ROOT}" O="${OUT_DIR}" CC=clang CROSS_COMPILE=aarch64-linux-gnu
 success "Defconfig generated"
 
 # ─── Step 7: Kernel build ────────────────────────────────────────────────────
-info "Building kernel with $(nproc) jobs..."
-make -j"$(nproc)" \
+info "Building kernel with ${THREAD_COUNT} jobs..."
+make -j"${THREAD_COUNT}" \
     -C "${KERNEL_ROOT}" \
     O="${OUT_DIR}" \
     ARCH=arm64 \
