@@ -11,6 +11,7 @@ Linux 5.4.302, built with Clang 22.0.2-r596125 (plus other compilation optimizat
 - Optimized for battery life and performance
 - Disabled several kernel debugging tools, flags, and features
 - Backported [Multi-Gen LRU](https://docs.kernel.org/admin-guide/mm/multigen_lru.html) for better performance under memory pressure
+- Backported [Maple Tree](https://docs.kernel.org/core-api/maple_tree.html) for highly efficient virtual memory area management
 - Enabled CONFIG_TMPFS_XATTR for [mountify](https://github.com/backslashxx/mountify) KernelSU module mounting compatibility
 - Disabled Samsung Knox
 - Switchable SELinux policy
@@ -286,3 +287,5 @@ I also used bone-machine's README as the base for my own (his detailed build ins
 - https://github.com/WildKernels/kernel_patches/
 
 - https://github.com/ProtonKernel/Proton
+
+- https://github.com/MirahSyakilla/android_kernel_xiaomi_lisa
