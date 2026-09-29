@@ -238,10 +238,10 @@ git commit -m "Update ReSukiSU to v4.2.0-rc1"
 ---
 
 # Credits (*)
-**salvogiangri** (kernel, UN1CA ROM), **Simon1511** (AOSP related changes), **Frax3r/utkustnr** (kernel, update-binary shell script and README.md instructions), **RisenID** (kernel), **saadelasfur** (kernel),  **MySelly** (crDroid's Nothing-Phone-1 kernel, SUSFS implementation), **Haky86** (kernel A23 5G), **DrRoot85** (kernel S23), **0xSecureByte** (kernel msm-5.4),
+**salvogiangri** (kernel, UN1CA ROM), **Simon1511** (AOSP related changes), **Frax3r/utkustnr** (kernel, update-binary shell script and README.md instructions), **RisenID** (kernel), **saadelasfur** (kernel), **OmarAlsmehan** (kernel),  **MySelly** (crDroid's Nothing-Phone-1 kernel, SUSFS implementation), **Haky86** (kernel A23 5G), **DrRoot85** (kernel S23), **0xSecureByte** (kernel msm-5.4),
 ReSukiSU (group project?), **rifsxd** (KSU-Next), **backslashxx** (Manual hook implementation for KSU-Next), **osm0sis** (Recovery Flashable Zip shell script), **ravindu644** (kernel compilation), **Samsung** (original kernel source code), **CodeLinaro** (kernel Qualcomm msm-5.4)
 
-Special thanks to bone-machine (https://github.com/bone-machine/android_kernel_samsung_sm7325_a52s_5g). I forked saadelasfur's repo as the base for this kernel, but cherry picked a lot of commits from bone-machine's repo and use his build script too (it would take me a long time to make one on my own)
+Special thanks to [bone-machine](https://github.com/bone-machine/android_kernel_samsung_sm7325_a52s_5g). I forked [Nova kernel](https://github.com/OmarAlsmehan/Nova-Kernel) as the base for this kernel, but cherry picked a lot of commits from bone-machine's repo and use his build script too (it would take me a long time to make one on my own)
 
 I also used bone-machine's README as the base for my own (his detailed build instructions helped me out so it'll help yall out too).
 
