@@ -103,7 +103,7 @@ sudo apt update && sudo apt install -y \
 Most of the next steps are outdated, but it will still build successfully.
 
 ### Requirements
-- [Clang-19-r530567](https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r530567.tar.gz)
+- [Clang-22-r596125](https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/mirror-goog-main-llvm-toolchain-source/clang-r596125.tar.gz). you can download the arm64 version by changing 'linux-x86' in the link to 'linux-arm64' (or other available arches)
 - [Magiskboot](https://github.com/topjohnwu/Magisk/releases/download/v30.7/Magisk-v30.7.apk)
 
 ### Clone this repository
