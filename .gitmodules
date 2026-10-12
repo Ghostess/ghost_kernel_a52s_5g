@@ -1,6 +1,6 @@
-[submodule "ReSukiSU"]
-	path = ReSukiSU
-	url = https://github.com/ReSukiSU/ReSukiSU
+[submodule "BakaSU"]
+	path = BakaSU
+	url = https://github.com/Baka-SU/BakaSU.git
 	branch = main
 [submodule "base-images"]
 	path = base-images

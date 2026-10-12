@@ -74,8 +74,8 @@ MAGISK_APK_URL="https://github.com/topjohnwu/Magisk/releases/download/v30.7/Magi
 
 # Script lives in the kernel root — resolve its real location regardless of cwd
 KERNEL_ROOT="$(cd "$(dirname "$0")" && pwd)"
-KSU_NAME="ReSukiSU"
-KSU_DIR="${KERNEL_ROOT}/ReSukiSU"
+KSU_NAME="BakaSU"
+KSU_DIR="${KERNEL_ROOT}/BakaSU"
 TOOLCHAIN_DIR="${KERNEL_ROOT}/toolchain"
 CLANG_DIR="${TOOLCHAIN_DIR}/clang"
 MAGISKBOOT_BIN="${TOOLCHAIN_DIR}/magiskboot/magiskboot"
