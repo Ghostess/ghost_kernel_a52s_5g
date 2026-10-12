@@ -54,7 +54,7 @@ jobs:
       - name: Upload Release Artifact
         uses: actions/upload-artifact@v7
         with:
-          name: "ghost_kernel-${{ github.base_ref }}-${{ env.sha_short }}"
+          name: "ghost_kernel-${{ github.ref_name }}-release-${{ env.sha_short }}"
           path: "release/"
           compression-level: 0
           include-hidden-files: true
