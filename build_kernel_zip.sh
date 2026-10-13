@@ -145,7 +145,11 @@ git -C "${KERNEL_ROOT}" rev-parse --git-dir >/dev/null 2>&1 \
     || die "Kernel root is not a git repository"
 
 info "Updating git submodules..."
-git -C "${KERNEL_ROOT}" submodule update --init --recursive
+git -C "${KERNEL_ROOT}" submodule update --init --recursive --depth 1
+if [  "$(git -C "${KSU_DIR}" rev-parse --is-shallow-repository)" = "true" ]; then 
+    info "Unshallowing ${KSU_NAME}..."
+    git -C "${KSU_DIR}" fetch --unshallow
+fi
 info "Fetching ${KSU_NAME} tags..."
 git -C "${KSU_DIR}" fetch origin --tags
 success "Submodules up to date"
