@@ -38,14 +38,21 @@ jobs:
           chmod +x ./build_kernel_zip.sh
           ./build_kernel_zip.sh
 
-      - name: Set env variables
-        run: |
-          echo "sha_short=`git rev-parse --short HEAD`" >> $GITHUB_ENV
-
-      - name: Upload Release Artifact
+      - name: Upload OneUI Release
         uses: actions/upload-artifact@v7
         with:
-          name: "ghost_kernel-${{ github.ref_name }}-release-${{ env.sha_short }}"
-          path: "release/"
-          compression-level: 0
+          path: "release/*One-UI*.zip"
+          archive: false
+
+      - name: Upload AOSP Release
+        uses: actions/upload-artifact@v7
+        with:
+          path: "release/*AOSP*.zip"
+          archive: false
+
+      - name: Upload Kernel Config
+        uses: actions/upload-artifact@v7
+        with:
+          path: "release/.config"
+          archive: false
           include-hidden-files: true
