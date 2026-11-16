@@ -5482,6 +5482,29 @@ static struct file_system_type sdfat_fs_type = {
 	.fs_flags    = FS_REQUIRES_DEV,
 };
 
+/*
+ * "exfat" is a pure mount-name alias of the sdfat driver, not a separate
+ * filesystem. AOSP vold resolves the fstab "auto" fs type of public
+ * volumes by probing the boot sector, then requires the resolved name to
+ * exist in /proc/filesystems and mounts with mount(2) fstype "exfat"
+ * (system/vold/fs/Exfat.cpp, model/PublicVolume.cpp in AOSP). Registering
+ * this alias makes such mounts go through the exact same sdfat mount path
+ * as "sdfat", which auto-detects FAT12/16/32 vs exFAT boot sectors.
+ * Samsung's One UI userspace keeps mounting with "sdfat"; both names
+ * remain valid, so nothing changes for One UI ROMs.
+ */
+static struct file_system_type exfat_fs_type = {
+	.owner       = THIS_MODULE,
+	.name        = "exfat",
+	.mount       = sdfat_fs_mount,
+#ifdef CONFIG_SDFAT_DBG_IOCTL
+	.kill_sb    = sdfat_debug_kill_sb,
+#else
+	.kill_sb    = kill_block_super,
+#endif /* CONFIG_SDFAT_DBG_IOCTL */
+	.fs_flags    = FS_REQUIRES_DEV,
+};
+
 static int __init init_sdfat_fs(void)
 {
 	int err;
@@ -5524,6 +5547,13 @@ static int __init init_sdfat_fs(void)
 		goto error;
 	}
 
+	err = register_filesystem(&exfat_fs_type);
+	if (err) {
+		pr_err("[SDFAT] failed to register exfat mount alias\n");
+		unregister_filesystem(&sdfat_fs_type);
+		goto error;
+	}
+
 	return 0;
 error:
 	sdfat_uevent_uninit();
@@ -5561,6 +5591,7 @@ static void __exit exit_sdfat_fs(void)
 	}
 
 	sdfat_destroy_inodecache();
+	unregister_filesystem(&exfat_fs_type);
 	unregister_filesystem(&sdfat_fs_type);
 
 	fsapi_shutdown();
