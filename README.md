@@ -16,6 +16,7 @@ Linux 5.4.302, built with Clang 22.0.2-r596125 (plus other compilation optimizat
 - Disabled Samsung Knox
 - Switchable SELinux policy
 - Backported NTSync*** (for better performance in Winlator/GameNative/etc)
+- [NoMount](https://github.com/maxsteeel/nomount) support
 - Full [Droidspaces](https://github.com/ravindu644/Droidspaces-OSS) support
 
 > Compatibility Notes: <br>
