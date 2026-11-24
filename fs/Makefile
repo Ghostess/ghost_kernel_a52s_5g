@@ -140,3 +140,5 @@ obj-$(CONFIG_EROFS_FS)		+= erofs/
 
 ifdef CONFIG_SEC_KUNIT
 endif
+
+obj-$(CONFIG_NOMOUNT) += nomount/
