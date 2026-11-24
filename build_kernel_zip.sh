@@ -254,6 +254,22 @@ make -C "${KERNEL_ROOT}" O="${OUT_DIR}" CC=clang CROSS_COMPILE=aarch64-linux-gnu
 success "Defconfig generated"
 
 # ─── Step 7: Kernel build ────────────────────────────────────────────────────
+info "Installing headers serially"
+make -j"${THREAD_COUNT}" \
+    -C "${KERNEL_ROOT}" \
+    O="${OUT_DIR}" \
+    ARCH=arm64 \
+    CC=clang \
+    LLVM=1 \
+    LLVM_IAS=1 \
+    CROSS_COMPILE=aarch64-linux-gnu- \
+    KBUILD_BUILD_USER="${KBUILD_BUILD_USER}" \
+    KBUILD_BUILD_HOST="${KBUILD_BUILD_HOST}" \
+    CONFIG_SECTION_MISMATCH_WARN_ONLY=y \
+    headers \
+    || die "Failed to install headers"
+success "Headers installed"
+
 info "Building kernel with ${THREAD_COUNT} jobs..."
 make -j"${THREAD_COUNT}" \
     -C "${KERNEL_ROOT}" \
