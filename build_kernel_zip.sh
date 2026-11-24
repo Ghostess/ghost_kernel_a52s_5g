@@ -87,6 +87,7 @@ BASE_IMAGES_DIR="${KERNEL_ROOT}/base-images"
 TEMPLATE_ZIP_DIR="${KERNEL_ROOT}/template-zip-file"
 IMAGES_DIR="${TEMPLATE_ZIP_DIR}/images"
 UPDATE_BINARY="${TEMPLATE_ZIP_DIR}/META-INF/com/google/android/update-binary"
+BRANCH=$(git -C "$KERNEL_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null)
 
 # ─── Sanity checks ────────────────────────────────────────────────────────────
 
@@ -401,12 +402,16 @@ for ROM_TYPE in "One-UI" "AOSP"; do
         MAGISKBOOT_VENDOR_DIR="${BASE_IMAGES_DIR}/aosp/vendor_boot"
     fi
 
-    # ZIP name: drop the KSU-Next segment on branches that don't ship it
-    if [[ "$KSU_VERSION" == "none" ]]; then
-        ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${DEVICE}_${SHA}.zip"
-    else
-        ZIP_NAME="${AUTHOR}_${BUILD_DATE}_${ROM_TYPE}_${KSU_NAME}-${KSU_VERSION}_${DEVICE}_${SHA}.zip"
+    ZIP_NAME="${AUTHOR}"
+    ZIP_NAME+="_${BUILD_DATE}"
+    ZIP_NAME+="_${ROM_TYPE}"
+    if [[ "$BRANCH" == "susfs" ]]; then
+        ZIP_NAME+="_SUSFS"
     fi
+    ZIP_NAME+="_${KSU_NAME}-${KSU_VERSION}"
+    ZIP_NAME+="_${DEVICE}"
+    ZIP_NAME+="_${SHA}"
+    ZIP_NAME+=".zip"
 
     # ─── Step 9: boot.img ────────────────────────────────────────────────────────
     find "${IMAGES_DIR}" -mindepth 1 -delete
